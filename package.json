@@ -1,0 +1,15 @@
+{
+  "name": "gb-web-emulator",
+  "private": true,
+  "workspaces": [
+    "web"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace web",
+    "build": "npm run build --workspace web",
+    "start": "npm run start --workspace web",
+    "lint": "npm run lint --workspace web",
+    "build:wasm": "powershell -ExecutionPolicy Bypass -File scripts/build-wasm.ps1",
+    "build:wasm:sh": "bash scripts/build-wasm.sh"
+  }
+}

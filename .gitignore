@@ -1,0 +1,23 @@
+# dependencies
+node_modules/
+**/node_modules/
+
+# Next.js
+web/.next/
+web/out/
+next-env.d.ts
+*.tsbuildinfo
+
+# C++ build output
+core/build/
+core/build-wasm/
+
+# generated wasm artifacts (produced by scripts/build-wasm.*)
+web/public/wasm/*.js
+web/public/wasm/*.wasm
+web/public/wasm/*.wasm.map
+!web/public/wasm/.gitkeep
+
+# misc
+.DS_Store
+*.log
