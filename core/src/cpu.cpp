@@ -30,6 +30,21 @@ uint16_t Cpu::fetch16(Mmu& mmu) {
     return static_cast<uint16_t>((hi << 8) | lo);
 }
 
+void Cpu::push16(Mmu& mmu, uint16_t value) {
+    --sp;
+    mmu.write8(sp, static_cast<uint8_t>(value & 0xFF));
+    --sp;
+    mmu.write8(sp, static_cast<uint8_t>(value & 0xFF));
+}
+
+uint16_t Cpu::pop16(Mmu& mmu) {
+    const uint8_t lo = mmu.read8(sp);
+    ++sp;
+    const uint8_t hi = mmu.read8(sp);
+    ++sp;
+    return static_cast<uint16_t>((hi << 8) | lo);
+}
+
 void Cpu::ld_r_d8(uint8_t& reg, uint8_t value) {
     reg = value;
 }

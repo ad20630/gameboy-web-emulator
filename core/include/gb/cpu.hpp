@@ -48,6 +48,8 @@ public:
 private:
     uint8_t fetch8(Mmu& mmu);
     uint16_t fetch16(Mmu& mmu);
+    void push16(Mmu& mmu, uint16_t);
+    uint16_t pop16(Mmu& mmu);
 
     void ld_r_d8(uint8_t& reg, uint8_t value);
     void inc_r(uint8_t& reg);
