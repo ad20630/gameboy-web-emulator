@@ -113,13 +113,59 @@ int Cpu::step(Mmu& mmu) {
         ld_r_d8(c, fetch8(mmu));
         return 8;
 
+    case 0x18: { // JR r8
+      const int8_t offset = static_cast<int8_t>(fetch8(mmu));
+      pc = static_cast<uint16_t>(pc + offset);
+      return 12;
+    }
+
+    case 0x20: // JR NZ,r8
+        if (!getFlag(kFlagZero)) {
+            const int8_t offset = static_cast<int8_t>(fetch8(mmu));
+            pc = static_cast<uint16_t>(pc + offset);
+            return 12;
+        } else {
+            fetch8(mmu);
+            return 8;
+        }
+
     case 0x21: // LD HL,d16
         setHl(fetch16(mmu));
         return 12;
 
+    case 0x28: // JR Z,r8
+        if (getFlag(kFlagZero)) {
+            const int8_t offset = static_cast<int8_t>(fetch8(mmu));
+            pc = static_cast<uint16_t>(pc + offset);
+            return 12;
+        } else {
+            fetch8(mmu);
+            return 8;
+        }
+
+    case 0x30: // JR NC,r8
+        if (!getFlag(kFlagCarry)) {
+            const int8_t offset = static_cast<int8_t>(fetch8(mmu));
+            pc = static_cast<uint16_t>(pc + offset);
+            return 12;
+        } else {
+            fetch8(mmu);
+            return 8;
+        }
+
     case 0x31: // LD SP,d16
         sp = fetch16(mmu);
         return 12;
+
+    case 0x38: // JR C,r8
+        if (getFlag(kFlagCarry)) {
+            const int8_t offset = static_cast<int8_t>(fetch8(mmu));
+            pc = static_cast<uint16_t>(pc + offset);
+            return 12;
+        } else {
+            fetch8(mmu);
+            return 8;
+        }
 
     case 0x3E: // LD A,d8
         ld_r_d8(a, fetch8(mmu));
