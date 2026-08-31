@@ -137,9 +137,42 @@ int Cpu::step(Mmu& mmu) {
         xor_a(a);
         return 4;
 
+    case 0xC1: // POP BC
+      setBc(pop16(mmu));
+      return 12;
+
     case 0xC3: // JP a16
         pc = fetch16(mmu);
         return 16;
+
+    case 0xC5: //PUSH BC
+        push16(mmu, bc());
+        return 12;
+
+    case 0xD1: // POP DE
+      setDe(pop16(mmu));
+      return 12;
+
+    case 0xD5: //PUSH DE
+        push16(mmu, de());
+        return 12;
+
+    case 0xE1: // POP HL
+      setHl(pop16(mmu));
+      return 12;
+
+    case 0xE5: //PUSH HL
+        push16(mmu, hl());
+        return 12;
+
+    case 0xF1: // POP AF
+      a = static_cast<uint8_t>(pop16(mmu) >> 8);
+      f = static_cast<uint8_t>(pop16(mmu) & 0xF0);
+      return 12;
+
+    case 0xF5: // PUSH AF
+      push16(mmu, static_cast<uint16_t>((a << 8) | f));
+      return 12;
 
     default:
         // unimplemented opcodes are noop
