@@ -35,4 +35,7 @@ if(EMSCRIPTEN)
         "-sENVIRONMENT=web"
         "-sALLOW_MEMORY_GROWTH=1"
     )
+else()
+    add_executable(rom_runner tools/rom_runner.cpp)
+    target_link_libraries(rom_runner PRIVATE gb_core)
 endif()

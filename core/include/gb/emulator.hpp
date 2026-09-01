@@ -1,5 +1,8 @@
 #pragma once
 
+#include <cstddef>
+#include <cstdint>
+
 #include "gb/apu.hpp"
 #include "gb/cartridge.hpp"
 #include "gb/cpu.hpp"
@@ -16,6 +19,11 @@ public:
     ~Emulator();
 
     void reset();
+    void loadRom(const uint8_t* data, size_t size);
+    int step();
+
+    Cpu& cpu() { return cpu_; }
+    Mmu& mmu() { return mmu_; }
 
 private:
     Cpu cpu_;
