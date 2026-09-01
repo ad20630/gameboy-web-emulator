@@ -32,7 +32,7 @@ uint16_t Cpu::fetch16(Mmu& mmu) {
 
 void Cpu::push16(Mmu& mmu, uint16_t value) {
     --sp;
-    mmu.write8(sp, static_cast<uint8_t>(value & 0xFF));
+    mmu.write8(sp, static_cast<uint8_t>(value >> 8));
     --sp;
     mmu.write8(sp, static_cast<uint8_t>(value & 0xFF));
 }
