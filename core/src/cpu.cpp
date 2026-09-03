@@ -74,10 +74,61 @@ void Cpu::add_a(uint8_t value) {
     setFlag(kFlagSubtract, false);
 }
 
+void Cpu::adc_a(uint8_t value) {
+    const uint8_t carryIn = getFlag(kFlagCarry) ? 1 : 0;
+    const uint16_t result = static_cast<uint16_t>(a) + value + carryIn;
+    setFlag(kFlagHalfCarry, ((a & 0x0F) + (value & 0x0F) + carryIn) > 0x0F);
+    setFlag(kFlagCarry, result > 0xFF);
+    a = static_cast<uint8_t>(result);
+    setFlag(kFlagZero, a == 0);
+    setFlag(kFlagSubtract, false);
+}
+
+void Cpu::sub_a(uint8_t value) {
+    setFlag(kFlagHalfCarry, (a & 0x0F) < (value & 0x0F));
+    setFlag(kFlagCarry, a < value);
+    a = static_cast<uint8_t>(a - value);
+    setFlag(kFlagZero, a == 0);
+    setFlag(kFlagSubtract, true);
+}
+
+void Cpu::sbc_a(uint8_t value) {
+    const uint8_t carryIn = getFlag(kFlagCarry) ? 1 : 0;
+    const int result = static_cast<int>(a) - value - carryIn;
+    setFlag(kFlagHalfCarry, (static_cast<int>(a & 0x0F) - (value & 0x0F) - carryIn) < 0);
+    setFlag(kFlagCarry, result < 0);
+    a = static_cast<uint8_t>(result);
+    setFlag(kFlagZero, a == 0);
+    setFlag(kFlagSubtract, true);
+}
+
+void Cpu::and_a(uint8_t value) {
+    a &= value;
+    setFlag(kFlagZero, a == 0);
+    setFlag(kFlagSubtract, false);
+    setFlag(kFlagHalfCarry, true);
+    setFlag(kFlagCarry, false);
+}
+
 void Cpu::xor_a(uint8_t value) {
     a ^= value;
     f = 0;
     setFlag(kFlagZero, a == 0);
+}
+
+void Cpu::or_a(uint8_t value) {
+    a |= value;
+    setFlag(kFlagZero, a == 0);
+    setFlag(kFlagSubtract, false);
+    setFlag(kFlagHalfCarry, false);
+    setFlag(kFlagCarry, false);
+}
+
+void Cpu::cp_a(uint8_t value) {
+    setFlag(kFlagHalfCarry, (a & 0x0F) < (value & 0x0F));
+    setFlag(kFlagCarry, a < value);
+    setFlag(kFlagZero, a == value);
+    setFlag(kFlagSubtract, true);
 }
 
 int Cpu::serviceInterrupt(Mmu& mmu, uint8_t mask, uint16_t vector) {
@@ -212,6 +263,81 @@ int Cpu::executeOpcode(Mmu& mmu, uint8_t opcode) {
     case 0x3E: // LD A,d8
         ld_r_d8(a, fetch8(mmu));
         return 8;
+
+    case 0x03: // INC BC
+        setBc(static_cast<uint16_t>(bc() + 1));
+        return 8;
+    case 0x0B: // DEC BC
+        setBc(static_cast<uint16_t>(bc() - 1));
+        return 8;
+    case 0x13: // INC DE
+        setDe(static_cast<uint16_t>(de() + 1));
+        return 8;
+    case 0x1B: // DEC DE
+        setDe(static_cast<uint16_t>(de() - 1));
+        return 8;
+    case 0x23: // INC HL
+        setHl(static_cast<uint16_t>(hl() + 1));
+        return 8;
+    case 0x2B: // DEC HL
+        setHl(static_cast<uint16_t>(hl() - 1));
+        return 8;
+    case 0x33: // INC SP
+        ++sp;
+        return 8;
+    case 0x3B: // DEC SP
+        --sp;
+        return 8;
+
+    case 0x0C: // INC C
+        inc_r(c);
+        return 4;
+    case 0x0D: // DEC C
+        dec_r(c);
+        return 4;
+    case 0x14: // INC D
+        inc_r(d);
+        return 4;
+    case 0x15: // DEC D
+        dec_r(d);
+        return 4;
+    case 0x1C: // INC E
+        inc_r(e);
+        return 4;
+    case 0x1D: // DEC E
+        dec_r(e);
+        return 4;
+    case 0x24: // INC H
+        inc_r(h);
+        return 4;
+    case 0x25: // DEC H
+        dec_r(h);
+        return 4;
+    case 0x2C: // INC L
+        inc_r(l);
+        return 4;
+    case 0x2D: // DEC L
+        dec_r(l);
+        return 4;
+    case 0x3C: // INC A
+        inc_r(a);
+        return 4;
+    case 0x3D: // DEC A
+        dec_r(a);
+        return 4;
+
+    case 0x34: { // INC (HL)
+        uint8_t value = mmu.read8(hl());
+        inc_r(value);
+        mmu.write8(hl(), value);
+        return 12;
+    }
+    case 0x35: { // DEC (HL)
+        uint8_t value = mmu.read8(hl());
+        dec_r(value);
+        mmu.write8(hl(), value);
+        return 12;
+    }
 
     case 0x40: // LD B,B
         b = b;
@@ -418,10 +544,227 @@ int Cpu::executeOpcode(Mmu& mmu, uint8_t opcode) {
     case 0x80: // ADD A,B
         add_a(b);
         return 4;
+    case 0x81: // ADD A,C
+        add_a(c);
+        return 4;
+    case 0x82: // ADD A,D
+        add_a(d);
+        return 4;
+    case 0x83: // ADD A,E
+        add_a(e);
+        return 4;
+    case 0x84: // ADD A,H
+        add_a(h);
+        return 4;
+    case 0x85: // ADD A,L
+        add_a(l);
+        return 4;
+    case 0x86: // ADD A,(HL)
+        add_a(mmu.read8(hl()));
+        return 8;
+    case 0x87: // ADD A,A
+        add_a(a);
+        return 4;
 
+    case 0x88: // ADC A,B
+        adc_a(b);
+        return 4;
+    case 0x89: // ADC A,C
+        adc_a(c);
+        return 4;
+    case 0x8A: // ADC A,D
+        adc_a(d);
+        return 4;
+    case 0x8B: // ADC A,E
+        adc_a(e);
+        return 4;
+    case 0x8C: // ADC A,H
+        adc_a(h);
+        return 4;
+    case 0x8D: // ADC A,L
+        adc_a(l);
+        return 4;
+    case 0x8E: // ADC A,(HL)
+        adc_a(mmu.read8(hl()));
+        return 8;
+    case 0x8F: // ADC A,A
+        adc_a(a);
+        return 4;
+
+    case 0x90: // SUB B
+        sub_a(b);
+        return 4;
+    case 0x91: // SUB C
+        sub_a(c);
+        return 4;
+    case 0x92: // SUB D
+        sub_a(d);
+        return 4;
+    case 0x93: // SUB E
+        sub_a(e);
+        return 4;
+    case 0x94: // SUB H
+        sub_a(h);
+        return 4;
+    case 0x95: // SUB L
+        sub_a(l);
+        return 4;
+    case 0x96: // SUB (HL)
+        sub_a(mmu.read8(hl()));
+        return 8;
+    case 0x97: // SUB A
+        sub_a(a);
+        return 4;
+
+    case 0x98: // SBC A,B
+        sbc_a(b);
+        return 4;
+    case 0x99: // SBC A,C
+        sbc_a(c);
+        return 4;
+    case 0x9A: // SBC A,D
+        sbc_a(d);
+        return 4;
+    case 0x9B: // SBC A,E
+        sbc_a(e);
+        return 4;
+    case 0x9C: // SBC A,H
+        sbc_a(h);
+        return 4;
+    case 0x9D: // SBC A,L
+        sbc_a(l);
+        return 4;
+    case 0x9E: // SBC A,(HL)
+        sbc_a(mmu.read8(hl()));
+        return 8;
+    case 0x9F: // SBC A,A
+        sbc_a(a);
+        return 4;
+
+    case 0xA0: // AND B
+        and_a(b);
+        return 4;
+    case 0xA1: // AND C
+        and_a(c);
+        return 4;
+    case 0xA2: // AND D
+        and_a(d);
+        return 4;
+    case 0xA3: // AND E
+        and_a(e);
+        return 4;
+    case 0xA4: // AND H
+        and_a(h);
+        return 4;
+    case 0xA5: // AND L
+        and_a(l);
+        return 4;
+    case 0xA6: // AND (HL)
+        and_a(mmu.read8(hl()));
+        return 8;
+    case 0xA7: // AND A
+        and_a(a);
+        return 4;
+
+    case 0xA8: // XOR B
+        xor_a(b);
+        return 4;
+    case 0xA9: // XOR C
+        xor_a(c);
+        return 4;
+    case 0xAA: // XOR D
+        xor_a(d);
+        return 4;
+    case 0xAB: // XOR E
+        xor_a(e);
+        return 4;
+    case 0xAC: // XOR H
+        xor_a(h);
+        return 4;
+    case 0xAD: // XOR L
+        xor_a(l);
+        return 4;
+    case 0xAE: // XOR (HL)
+        xor_a(mmu.read8(hl()));
+        return 8;
     case 0xAF: // XOR A
         xor_a(a);
         return 4;
+
+    case 0xB0: // OR B
+        or_a(b);
+        return 4;
+    case 0xB1: // OR C
+        or_a(c);
+        return 4;
+    case 0xB2: // OR D
+        or_a(d);
+        return 4;
+    case 0xB3: // OR E
+        or_a(e);
+        return 4;
+    case 0xB4: // OR H
+        or_a(h);
+        return 4;
+    case 0xB5: // OR L
+        or_a(l);
+        return 4;
+    case 0xB6: // OR (HL)
+        or_a(mmu.read8(hl()));
+        return 8;
+    case 0xB7: // OR A
+        or_a(a);
+        return 4;
+
+    case 0xB8: // CP B
+        cp_a(b);
+        return 4;
+    case 0xB9: // CP C
+        cp_a(c);
+        return 4;
+    case 0xBA: // CP D
+        cp_a(d);
+        return 4;
+    case 0xBB: // CP E
+        cp_a(e);
+        return 4;
+    case 0xBC: // CP H
+        cp_a(h);
+        return 4;
+    case 0xBD: // CP L
+        cp_a(l);
+        return 4;
+    case 0xBE: // CP (HL)
+        cp_a(mmu.read8(hl()));
+        return 8;
+    case 0xBF: // CP A
+        cp_a(a);
+        return 4;
+
+    case 0xC6: // ADD A,d8
+        add_a(fetch8(mmu));
+        return 8;
+    case 0xCE: // ADC A,d8
+        adc_a(fetch8(mmu));
+        return 8;
+    case 0xD6: // SUB d8
+        sub_a(fetch8(mmu));
+        return 8;
+    case 0xDE: // SBC A,d8
+        sbc_a(fetch8(mmu));
+        return 8;
+    case 0xE6: // AND d8
+        and_a(fetch8(mmu));
+        return 8;
+    case 0xEE: // XOR d8
+        xor_a(fetch8(mmu));
+        return 8;
+    case 0xF6: // OR d8
+        or_a(fetch8(mmu));
+        return 8;
+    case 0xFE: // CP d8
+        cp_a(fetch8(mmu));
+        return 8;
 
     case 0xC1: // POP BC
       setBc(pop16(mmu));

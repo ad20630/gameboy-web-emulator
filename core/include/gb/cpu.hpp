@@ -66,7 +66,13 @@ private:
     void inc_r(uint8_t& reg);
     void dec_r(uint8_t& reg);
     void add_a(uint8_t value);
+    void adc_a(uint8_t value);
+    void sub_a(uint8_t value);
+    void sbc_a(uint8_t value);
+    void and_a(uint8_t value);
     void xor_a(uint8_t value);
+    void or_a(uint8_t value);
+    void cp_a(uint8_t value);
 
     // Returns cycles for the serviced interrupt, or 0 if none is pending.
     int handleInterrupts(Mmu& mmu);
