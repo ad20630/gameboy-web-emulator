@@ -190,6 +190,10 @@ int Cpu::executeOpcode(Mmu& mmu, uint8_t opcode) {
         mmu.write8(bc(), a);
         return 8;
 
+    case 0x03: // INC BC
+        setBc(static_cast<uint16_t>(bc() + 1));
+        return 8;
+
     case 0x04: // INC B
         inc_r(b);
         return 4;
@@ -202,15 +206,48 @@ int Cpu::executeOpcode(Mmu& mmu, uint8_t opcode) {
         ld_r_d8(b, fetch8(mmu));
         return 8;
 
+    case 0x0B: // DEC BC
+        setBc(static_cast<uint16_t>(bc() - 1));
+        return 8;
+
+    case 0x0C: // INC C
+        inc_r(c);
+        return 4;
+    case 0x0D: // DEC C
+        dec_r(c);
+        return 4;
+
     case 0x0E: // LD C,d8
         ld_r_d8(c, fetch8(mmu));
         return 8;
+
+    case 0x13: // INC DE
+        setDe(static_cast<uint16_t>(de() + 1));
+        return 8;
+
+    case 0x14: // INC D
+        inc_r(d);
+        return 4;
+    case 0x15: // DEC D
+        dec_r(d);
+        return 4;
 
     case 0x18: { // JR r8
       const int8_t offset = static_cast<int8_t>(fetch8(mmu));
       pc = static_cast<uint16_t>(pc + offset);
       return 12;
     }
+
+    case 0x1B: // DEC DE
+        setDe(static_cast<uint16_t>(de() - 1));
+        return 8;
+
+    case 0x1C: // INC E
+        inc_r(e);
+        return 4;
+    case 0x1D: // DEC E
+        dec_r(e);
+        return 4;
 
     case 0x20: // JR NZ,r8
         if (!getFlag(kFlagZero)) {
@@ -226,6 +263,17 @@ int Cpu::executeOpcode(Mmu& mmu, uint8_t opcode) {
         setHl(fetch16(mmu));
         return 12;
 
+    case 0x23: // INC HL
+        setHl(static_cast<uint16_t>(hl() + 1));
+        return 8;
+
+    case 0x24: // INC H
+        inc_r(h);
+        return 4;
+    case 0x25: // DEC H
+        dec_r(h);
+        return 4;
+
     case 0x28: // JR Z,r8
         if (getFlag(kFlagZero)) {
             const int8_t offset = static_cast<int8_t>(fetch8(mmu));
@@ -235,6 +283,17 @@ int Cpu::executeOpcode(Mmu& mmu, uint8_t opcode) {
             fetch8(mmu);
             return 8;
         }
+
+    case 0x2B: // DEC HL
+        setHl(static_cast<uint16_t>(hl() - 1));
+        return 8;
+
+    case 0x2C: // INC L
+        inc_r(l);
+        return 4;
+    case 0x2D: // DEC L
+        dec_r(l);
+        return 4;
 
     case 0x30: // JR NC,r8
         if (!getFlag(kFlagCarry)) {
@@ -250,81 +309,9 @@ int Cpu::executeOpcode(Mmu& mmu, uint8_t opcode) {
         sp = fetch16(mmu);
         return 12;
 
-    case 0x38: // JR C,r8
-        if (getFlag(kFlagCarry)) {
-            const int8_t offset = static_cast<int8_t>(fetch8(mmu));
-            pc = static_cast<uint16_t>(pc + offset);
-            return 12;
-        } else {
-            fetch8(mmu);
-            return 8;
-        }
-
-    case 0x3E: // LD A,d8
-        ld_r_d8(a, fetch8(mmu));
-        return 8;
-
-    case 0x03: // INC BC
-        setBc(static_cast<uint16_t>(bc() + 1));
-        return 8;
-    case 0x0B: // DEC BC
-        setBc(static_cast<uint16_t>(bc() - 1));
-        return 8;
-    case 0x13: // INC DE
-        setDe(static_cast<uint16_t>(de() + 1));
-        return 8;
-    case 0x1B: // DEC DE
-        setDe(static_cast<uint16_t>(de() - 1));
-        return 8;
-    case 0x23: // INC HL
-        setHl(static_cast<uint16_t>(hl() + 1));
-        return 8;
-    case 0x2B: // DEC HL
-        setHl(static_cast<uint16_t>(hl() - 1));
-        return 8;
     case 0x33: // INC SP
         ++sp;
         return 8;
-    case 0x3B: // DEC SP
-        --sp;
-        return 8;
-
-    case 0x0C: // INC C
-        inc_r(c);
-        return 4;
-    case 0x0D: // DEC C
-        dec_r(c);
-        return 4;
-    case 0x14: // INC D
-        inc_r(d);
-        return 4;
-    case 0x15: // DEC D
-        dec_r(d);
-        return 4;
-    case 0x1C: // INC E
-        inc_r(e);
-        return 4;
-    case 0x1D: // DEC E
-        dec_r(e);
-        return 4;
-    case 0x24: // INC H
-        inc_r(h);
-        return 4;
-    case 0x25: // DEC H
-        dec_r(h);
-        return 4;
-    case 0x2C: // INC L
-        inc_r(l);
-        return 4;
-    case 0x2D: // DEC L
-        dec_r(l);
-        return 4;
-    case 0x3C: // INC A
-        inc_r(a);
-        return 4;
-    case 0x3D: // DEC A
-        dec_r(a);
-        return 4;
 
     case 0x34: { // INC (HL)
         uint8_t value = mmu.read8(hl());
@@ -338,6 +325,31 @@ int Cpu::executeOpcode(Mmu& mmu, uint8_t opcode) {
         mmu.write8(hl(), value);
         return 12;
     }
+
+    case 0x38: // JR C,r8
+        if (getFlag(kFlagCarry)) {
+            const int8_t offset = static_cast<int8_t>(fetch8(mmu));
+            pc = static_cast<uint16_t>(pc + offset);
+            return 12;
+        } else {
+            fetch8(mmu);
+            return 8;
+        }
+
+    case 0x3B: // DEC SP
+        --sp;
+        return 8;
+
+    case 0x3C: // INC A
+        inc_r(a);
+        return 4;
+    case 0x3D: // DEC A
+        dec_r(a);
+        return 4;
+
+    case 0x3E: // LD A,d8
+        ld_r_d8(a, fetch8(mmu));
+        return 8;
 
     case 0x40: // LD B,B
         b = b;
@@ -741,29 +753,11 @@ int Cpu::executeOpcode(Mmu& mmu, uint8_t opcode) {
         cp_a(a);
         return 4;
 
-    case 0xC6: // ADD A,d8
-        add_a(fetch8(mmu));
-        return 8;
-    case 0xCE: // ADC A,d8
-        adc_a(fetch8(mmu));
-        return 8;
-    case 0xD6: // SUB d8
-        sub_a(fetch8(mmu));
-        return 8;
-    case 0xDE: // SBC A,d8
-        sbc_a(fetch8(mmu));
-        return 8;
-    case 0xE6: // AND d8
-        and_a(fetch8(mmu));
-        return 8;
-    case 0xEE: // XOR d8
-        xor_a(fetch8(mmu));
-        return 8;
-    case 0xF6: // OR d8
-        or_a(fetch8(mmu));
-        return 8;
-    case 0xFE: // CP d8
-        cp_a(fetch8(mmu));
+    case 0xC0: // RET NZ
+        if (!getFlag(kFlagZero)) {
+            pc = pop16(mmu);
+            return 20;
+        }
         return 8;
 
     case 0xC1: // POP BC
@@ -774,16 +768,129 @@ int Cpu::executeOpcode(Mmu& mmu, uint8_t opcode) {
         pc = fetch16(mmu);
         return 16;
 
+    case 0xC4: { // CALL NZ,a16
+        const uint16_t address = fetch16(mmu);
+        if (!getFlag(kFlagZero)) {
+            push16(mmu, pc);
+            pc = address;
+            return 24;
+        }
+        return 12;
+    }
+
     case 0xC5: //PUSH BC
         push16(mmu, bc());
         return 16;
+
+    case 0xC6: // ADD A,d8
+        add_a(fetch8(mmu));
+        return 8;
+
+    case 0xC7: // RST 00H
+        push16(mmu, pc);
+        pc = 0x00;
+        return 16;
+
+    case 0xC8: // RET Z
+        if (getFlag(kFlagZero)) {
+            pc = pop16(mmu);
+            return 20;
+        }
+        return 8;
+
+    case 0xC9: // RET
+        pc = pop16(mmu);
+        return 16;
+
+    case 0xCC: { // CALL Z,a16
+        const uint16_t address = fetch16(mmu);
+        if (getFlag(kFlagZero)) {
+            push16(mmu, pc);
+            pc = address;
+            return 24;
+        }
+        return 12;
+    }
+
+    case 0xCD: { // CALL a16
+        const uint16_t address = fetch16(mmu);
+        push16(mmu, pc);
+        pc = address;
+        return 24;
+    }
+
+    case 0xCE: // ADC A,d8
+        adc_a(fetch8(mmu));
+        return 8;
+
+    case 0xCF: // RST 08H
+        push16(mmu, pc);
+        pc = 0x08;
+        return 16;
+
+    case 0xD0: // RET NC
+        if (!getFlag(kFlagCarry)) {
+            pc = pop16(mmu);
+            return 20;
+        }
+        return 8;
 
     case 0xD1: // POP DE
       setDe(pop16(mmu));
       return 12;
 
+    case 0xD4: { // CALL NC,a16
+        const uint16_t address = fetch16(mmu);
+        if (!getFlag(kFlagCarry)) {
+            push16(mmu, pc);
+            pc = address;
+            return 24;
+        }
+        return 12;
+    }
+
     case 0xD5: //PUSH DE
         push16(mmu, de());
+        return 16;
+
+    case 0xD6: // SUB d8
+        sub_a(fetch8(mmu));
+        return 8;
+
+    case 0xD7: // RST 10H
+        push16(mmu, pc);
+        pc = 0x10;
+        return 16;
+
+    case 0xD8: // RET C
+        if (getFlag(kFlagCarry)) {
+            pc = pop16(mmu);
+            return 20;
+        }
+        return 8;
+
+    case 0xD9: // RETI
+        pc = pop16(mmu);
+        ime = true;
+        return 16;
+
+    case 0xDC: { // CALL C,a16
+        const uint16_t address = fetch16(mmu);
+        if (getFlag(kFlagCarry)) {
+            push16(mmu, pc);
+            pc = address;
+            return 24;
+        }
+        return 12;
+    }
+
+    case 0xDE: // SBC A,d8
+        sbc_a(fetch8(mmu));
+        return 8;
+
+    case 0xDF: // RST 18H
+        push16(mmu, pc);
+        pc = 0x18;
         return 16;
 
     case 0xE1: // POP HL
@@ -794,6 +901,24 @@ int Cpu::executeOpcode(Mmu& mmu, uint8_t opcode) {
         push16(mmu, hl());
         return 16;
 
+    case 0xE6: // AND d8
+        and_a(fetch8(mmu));
+        return 8;
+
+    case 0xE7: // RST 20H
+        push16(mmu, pc);
+        pc = 0x20;
+        return 16;
+
+    case 0xEE: // XOR d8
+        xor_a(fetch8(mmu));
+        return 8;
+
+    case 0xEF: // RST 28H
+        push16(mmu, pc);
+        pc = 0x28;
+        return 16;
+
     case 0xF1: { // POP AF
       const uint16_t af = pop16(mmu);
       a = static_cast<uint8_t>(af >> 8);
@@ -801,27 +926,36 @@ int Cpu::executeOpcode(Mmu& mmu, uint8_t opcode) {
       return 12;
     }
 
-    case 0xF5: // PUSH AF
-      push16(mmu, static_cast<uint16_t>((a << 8) | f));
-      return 16;
-
-    case 0xC9: // RET
-        pc = pop16(mmu);
-        return 16;
-
-    case 0xD9: // RETI
-        pc = pop16(mmu);
-        ime = true;
-        return 16;
-
     case 0xF3: // DI
         ime = false;
         imeScheduled = false;
         return 4;
 
+    case 0xF5: // PUSH AF
+      push16(mmu, static_cast<uint16_t>((a << 8) | f));
+      return 16;
+
+    case 0xF6: // OR d8
+        or_a(fetch8(mmu));
+        return 8;
+
+    case 0xF7: // RST 30H
+        push16(mmu, pc);
+        pc = 0x30;
+        return 16;
+
     case 0xFB: // EI
         imeScheduled = true;
         return 4;
+
+    case 0xFE: // CP d8
+        cp_a(fetch8(mmu));
+        return 8;
+
+    case 0xFF: // RST 38H
+        push16(mmu, pc);
+        pc = 0x38;
+        return 16;
 
     default:
         // unimplemented opcodes are noop
