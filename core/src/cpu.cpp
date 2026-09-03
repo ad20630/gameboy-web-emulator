@@ -206,6 +206,10 @@ int Cpu::executeOpcode(Mmu& mmu, uint8_t opcode) {
         ld_r_d8(b, fetch8(mmu));
         return 8;
 
+    case 0x0A: // LD A,(BC)
+        a = mmu.read8(bc());
+        return 8;
+
     case 0x0B: // DEC BC
         setBc(static_cast<uint16_t>(bc() - 1));
         return 8;
@@ -219,6 +223,10 @@ int Cpu::executeOpcode(Mmu& mmu, uint8_t opcode) {
 
     case 0x0E: // LD C,d8
         ld_r_d8(c, fetch8(mmu));
+        return 8;
+
+    case 0x12: // LD (DE),A
+        mmu.write8(de(), a);
         return 8;
 
     case 0x13: // INC DE
@@ -237,6 +245,10 @@ int Cpu::executeOpcode(Mmu& mmu, uint8_t opcode) {
       pc = static_cast<uint16_t>(pc + offset);
       return 12;
     }
+
+    case 0x1A: // LD A,(DE)
+        a = mmu.read8(de());
+        return 8;
 
     case 0x1B: // DEC DE
         setDe(static_cast<uint16_t>(de() - 1));
@@ -263,6 +275,11 @@ int Cpu::executeOpcode(Mmu& mmu, uint8_t opcode) {
         setHl(fetch16(mmu));
         return 12;
 
+    case 0x22: // LD (HL+),A
+        mmu.write8(hl(), a);
+        setHl(static_cast<uint16_t>(hl() + 1));
+        return 8;
+
     case 0x23: // INC HL
         setHl(static_cast<uint16_t>(hl() + 1));
         return 8;
@@ -283,6 +300,13 @@ int Cpu::executeOpcode(Mmu& mmu, uint8_t opcode) {
             fetch8(mmu);
             return 8;
         }
+
+    case 0x2A: { // LD A,(HL+)
+        const uint16_t address = hl();
+        a = mmu.read8(address);
+        setHl(static_cast<uint16_t>(address + 1));
+        return 8;
+    }
 
     case 0x2B: // DEC HL
         setHl(static_cast<uint16_t>(hl() - 1));
@@ -309,6 +333,11 @@ int Cpu::executeOpcode(Mmu& mmu, uint8_t opcode) {
         sp = fetch16(mmu);
         return 12;
 
+    case 0x32: // LD (HL-),A
+        mmu.write8(hl(), a);
+        setHl(static_cast<uint16_t>(hl() - 1));
+        return 8;
+
     case 0x33: // INC SP
         ++sp;
         return 8;
@@ -326,6 +355,10 @@ int Cpu::executeOpcode(Mmu& mmu, uint8_t opcode) {
         return 12;
     }
 
+    case 0x36: // LD (HL),d8
+        mmu.write8(hl(), fetch8(mmu));
+        return 12;
+
     case 0x38: // JR C,r8
         if (getFlag(kFlagCarry)) {
             const int8_t offset = static_cast<int8_t>(fetch8(mmu));
@@ -335,6 +368,13 @@ int Cpu::executeOpcode(Mmu& mmu, uint8_t opcode) {
             fetch8(mmu);
             return 8;
         }
+
+    case 0x3A: { // LD A,(HL-)
+        const uint16_t address = hl();
+        a = mmu.read8(address);
+        setHl(static_cast<uint16_t>(address - 1));
+        return 8;
+    }
 
     case 0x3B: // DEC SP
         --sp;
@@ -893,9 +933,17 @@ int Cpu::executeOpcode(Mmu& mmu, uint8_t opcode) {
         pc = 0x18;
         return 16;
 
+    case 0xE0: // LDH (a8),A
+        mmu.write8(static_cast<uint16_t>(0xFF00 + fetch8(mmu)), a);
+        return 12;
+
     case 0xE1: // POP HL
       setHl(pop16(mmu));
       return 12;
+
+    case 0xE2: // LD (C),A
+        mmu.write8(static_cast<uint16_t>(0xFF00 + c), a);
+        return 8;
 
     case 0xE5: //PUSH HL
         push16(mmu, hl());
@@ -910,6 +958,10 @@ int Cpu::executeOpcode(Mmu& mmu, uint8_t opcode) {
         pc = 0x20;
         return 16;
 
+    case 0xEA: // LD (a16),A
+        mmu.write8(fetch16(mmu), a);
+        return 16;
+
     case 0xEE: // XOR d8
         xor_a(fetch8(mmu));
         return 8;
@@ -919,12 +971,20 @@ int Cpu::executeOpcode(Mmu& mmu, uint8_t opcode) {
         pc = 0x28;
         return 16;
 
+    case 0xF0: // LDH A,(a8)
+        a = mmu.read8(static_cast<uint16_t>(0xFF00 + fetch8(mmu)));
+        return 12;
+
     case 0xF1: { // POP AF
       const uint16_t af = pop16(mmu);
       a = static_cast<uint8_t>(af >> 8);
       f = static_cast<uint8_t>(af & 0xF0);
       return 12;
     }
+
+    case 0xF2: // LD A,(C)
+        a = mmu.read8(static_cast<uint16_t>(0xFF00 + c));
+        return 8;
 
     case 0xF3: // DI
         ime = false;
@@ -942,6 +1002,10 @@ int Cpu::executeOpcode(Mmu& mmu, uint8_t opcode) {
     case 0xF7: // RST 30H
         push16(mmu, pc);
         pc = 0x30;
+        return 16;
+
+    case 0xFA: // LD A,(a16)
+        a = mmu.read8(fetch16(mmu));
         return 16;
 
     case 0xFB: // EI
