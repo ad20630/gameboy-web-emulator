@@ -21,6 +21,14 @@ public:
     static constexpr uint8_t kFlagHalfCarry = 0x20;
     static constexpr uint8_t kFlagCarry = 0x10;
 
+    static constexpr uint16_t kIfAddress = 0xFF0F;
+    static constexpr uint16_t kIeAddress = 0xFFFF;
+    static constexpr uint8_t kInterruptVBlank = 0x01;
+    static constexpr uint8_t kInterruptLcdStat = 0x02;
+    static constexpr uint8_t kInterruptTimer = 0x04;
+    static constexpr uint8_t kInterruptSerial = 0x08;
+    static constexpr uint8_t kInterruptJoypad = 0x10;
+
     uint8_t a = 0;
     uint8_t f = 0;
     uint8_t b = 0;
@@ -32,6 +40,7 @@ public:
     uint16_t sp = 0;
     uint16_t pc = 0;
     bool halted = false;
+    bool ime = false;
 
     uint16_t bc() const { return static_cast<uint16_t>((b << 8) | c); }
     void setBc(uint16_t value) { b = static_cast<uint8_t>(value >> 8); c = static_cast<uint8_t>(value); }
@@ -46,6 +55,8 @@ public:
     }
 
 private:
+    bool imeScheduled = false;
+
     uint8_t fetch8(Mmu& mmu);
     uint16_t fetch16(Mmu& mmu);
     void push16(Mmu& mmu, uint16_t);
@@ -56,6 +67,11 @@ private:
     void dec_r(uint8_t& reg);
     void add_a(uint8_t value);
     void xor_a(uint8_t value);
+
+    // Returns cycles for the serviced interrupt, or 0 if none is pending.
+    int handleInterrupts(Mmu& mmu);
+    int serviceInterrupt(Mmu& mmu, uint8_t mask, uint16_t vector);
+    int executeOpcode(Mmu& mmu, uint8_t opcode);
 };
 
 } // namespace gb
