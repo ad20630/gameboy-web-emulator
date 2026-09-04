@@ -906,6 +906,15 @@ int Cpu::executeOpcode(Mmu& mmu, uint8_t opcode) {
       setBc(pop16(mmu));
       return 12;
 
+    case 0xC2: { // JP NZ,a16
+        const uint16_t address = fetch16(mmu);
+        if (!getFlag(kFlagZero)) {
+            pc = address;
+            return 16;
+        }
+        return 12;
+    }
+
     case 0xC3: // JP a16
         pc = fetch16(mmu);
         return 16;
@@ -943,6 +952,15 @@ int Cpu::executeOpcode(Mmu& mmu, uint8_t opcode) {
     case 0xC9: // RET
         pc = pop16(mmu);
         return 16;
+
+    case 0xCA: { // JP Z,a16
+        const uint16_t address = fetch16(mmu);
+        if (getFlag(kFlagZero)) {
+            pc = address;
+            return 16;
+        }
+        return 12;
+    }
 
     case 0xCB: // CB prefix
         return executeCbOpcode(mmu, fetch8(mmu));
@@ -984,6 +1002,15 @@ int Cpu::executeOpcode(Mmu& mmu, uint8_t opcode) {
       setDe(pop16(mmu));
       return 12;
 
+    case 0xD2: { // JP NC,a16
+        const uint16_t address = fetch16(mmu);
+        if (!getFlag(kFlagCarry)) {
+            pc = address;
+            return 16;
+        }
+        return 12;
+    }
+
     case 0xD4: { // CALL NC,a16
         const uint16_t address = fetch16(mmu);
         if (!getFlag(kFlagCarry)) {
@@ -1018,6 +1045,15 @@ int Cpu::executeOpcode(Mmu& mmu, uint8_t opcode) {
         pc = pop16(mmu);
         ime = true;
         return 16;
+
+    case 0xDA: { // JP C,a16
+        const uint16_t address = fetch16(mmu);
+        if (getFlag(kFlagCarry)) {
+            pc = address;
+            return 16;
+        }
+        return 12;
+    }
 
     case 0xDC: { // CALL C,a16
         const uint16_t address = fetch16(mmu);
