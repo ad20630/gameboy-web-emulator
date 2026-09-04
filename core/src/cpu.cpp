@@ -308,6 +308,13 @@ int Cpu::executeOpcode(Mmu& mmu, uint8_t opcode) {
         ld_r_d8(b, fetch8(mmu));
         return 8;
 
+    case 0x08: { // LD (a16),SP
+        const uint16_t address = fetch16(mmu);
+        mmu.write8(address, static_cast<uint8_t>(sp & 0xFF));
+        mmu.write8(static_cast<uint16_t>(address + 1), static_cast<uint8_t>(sp >> 8));
+        return 20;
+    }
+
     case 0x0A: // LD A,(BC)
         a = mmu.read8(bc());
         return 8;
@@ -327,6 +334,15 @@ int Cpu::executeOpcode(Mmu& mmu, uint8_t opcode) {
         ld_r_d8(c, fetch8(mmu));
         return 8;
 
+    case 0x10: // STOP
+        fetch8(mmu);
+        halted = true;
+        return 4;
+
+    case 0x11: // LD DE,d16
+        setDe(fetch16(mmu));
+        return 12;
+
     case 0x12: // LD (DE),A
         mmu.write8(de(), a);
         return 8;
@@ -341,6 +357,10 @@ int Cpu::executeOpcode(Mmu& mmu, uint8_t opcode) {
     case 0x15: // DEC D
         dec_r(d);
         return 4;
+
+    case 0x16: // LD D,d8
+        ld_r_d8(d, fetch8(mmu));
+        return 8;
 
     case 0x18: { // JR r8
       const int8_t offset = static_cast<int8_t>(fetch8(mmu));
@@ -362,6 +382,10 @@ int Cpu::executeOpcode(Mmu& mmu, uint8_t opcode) {
     case 0x1D: // DEC E
         dec_r(e);
         return 4;
+
+    case 0x1E: // LD E,d8
+        ld_r_d8(e, fetch8(mmu));
+        return 8;
 
     case 0x20: // JR NZ,r8
         if (!getFlag(kFlagZero)) {
@@ -393,6 +417,10 @@ int Cpu::executeOpcode(Mmu& mmu, uint8_t opcode) {
         dec_r(h);
         return 4;
 
+    case 0x26: // LD H,d8
+        ld_r_d8(h, fetch8(mmu));
+        return 8;
+
     case 0x28: // JR Z,r8
         if (getFlag(kFlagZero)) {
             const int8_t offset = static_cast<int8_t>(fetch8(mmu));
@@ -420,6 +448,10 @@ int Cpu::executeOpcode(Mmu& mmu, uint8_t opcode) {
     case 0x2D: // DEC L
         dec_r(l);
         return 4;
+
+    case 0x2E: // LD L,d8
+        ld_r_d8(l, fetch8(mmu));
+        return 8;
 
     case 0x30: // JR NC,r8
         if (!getFlag(kFlagCarry)) {
@@ -1099,6 +1131,10 @@ int Cpu::executeOpcode(Mmu& mmu, uint8_t opcode) {
         pc = 0x20;
         return 16;
 
+    case 0xE9: // JP (HL)
+        pc = hl();
+        return 4;
+
     case 0xEA: // LD (a16),A
         mmu.write8(fetch16(mmu), a);
         return 16;
@@ -1144,6 +1180,21 @@ int Cpu::executeOpcode(Mmu& mmu, uint8_t opcode) {
         push16(mmu, pc);
         pc = 0x30;
         return 16;
+
+    case 0xF8: { // LD HL,SP+r8
+        const int8_t offset = static_cast<int8_t>(fetch8(mmu));
+        const uint8_t unsignedOffset = static_cast<uint8_t>(offset);
+        setFlag(kFlagZero, false);
+        setFlag(kFlagSubtract, false);
+        setFlag(kFlagHalfCarry, ((sp & 0x0F) + (unsignedOffset & 0x0F)) > 0x0F);
+        setFlag(kFlagCarry, ((sp & 0xFF) + unsignedOffset) > 0xFF);
+        setHl(static_cast<uint16_t>(sp + offset));
+        return 12;
+    }
+
+    case 0xF9: // LD SP,HL
+        sp = hl();
+        return 8;
 
     case 0xFA: // LD A,(a16)
         a = mmu.read8(fetch16(mmu));
