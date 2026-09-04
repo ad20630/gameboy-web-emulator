@@ -131,6 +131,108 @@ void Cpu::cp_a(uint8_t value) {
     setFlag(kFlagSubtract, true);
 }
 
+void Cpu::rlc_r(uint8_t& reg) {
+    const bool carry = (reg & 0x80) != 0;
+    reg = static_cast<uint8_t>((reg << 1) | (carry ? 0x01 : 0x00));
+    setFlag(kFlagZero, reg == 0);
+    setFlag(kFlagSubtract, false);
+    setFlag(kFlagHalfCarry, false);
+    setFlag(kFlagCarry, carry);
+}
+
+void Cpu::rrc_r(uint8_t& reg) {
+    const bool carry = (reg & 0x01) != 0;
+    reg = static_cast<uint8_t>((reg >> 1) | (carry ? 0x80 : 0x00));
+    setFlag(kFlagZero, reg == 0);
+    setFlag(kFlagSubtract, false);
+    setFlag(kFlagHalfCarry, false);
+    setFlag(kFlagCarry, carry);
+}
+
+void Cpu::rl_r(uint8_t& reg) {
+    const bool oldCarry = getFlag(kFlagCarry);
+    const bool newCarry = (reg & 0x80) != 0;
+    reg = static_cast<uint8_t>((reg << 1) | (oldCarry ? 0x01 : 0x00));
+    setFlag(kFlagZero, reg == 0);
+    setFlag(kFlagSubtract, false);
+    setFlag(kFlagHalfCarry, false);
+    setFlag(kFlagCarry, newCarry);
+}
+
+void Cpu::rr_r(uint8_t& reg) {
+    const bool oldCarry = getFlag(kFlagCarry);
+    const bool newCarry = (reg & 0x01) != 0;
+    reg = static_cast<uint8_t>((reg >> 1) | (oldCarry ? 0x80 : 0x00));
+    setFlag(kFlagZero, reg == 0);
+    setFlag(kFlagSubtract, false);
+    setFlag(kFlagHalfCarry, false);
+    setFlag(kFlagCarry, newCarry);
+}
+
+void Cpu::sla_r(uint8_t& reg) {
+    const bool carry = (reg & 0x80) != 0;
+    reg = static_cast<uint8_t>(reg << 1);
+    setFlag(kFlagZero, reg == 0);
+    setFlag(kFlagSubtract, false);
+    setFlag(kFlagHalfCarry, false);
+    setFlag(kFlagCarry, carry);
+}
+
+void Cpu::sra_r(uint8_t& reg) {
+    const bool carry = (reg & 0x01) != 0;
+    reg = static_cast<uint8_t>((reg >> 1) | (reg & 0x80));
+    setFlag(kFlagZero, reg == 0);
+    setFlag(kFlagSubtract, false);
+    setFlag(kFlagHalfCarry, false);
+    setFlag(kFlagCarry, carry);
+}
+
+void Cpu::swap_r(uint8_t& reg) {
+    reg = static_cast<uint8_t>((reg << 4) | (reg >> 4));
+    setFlag(kFlagZero, reg == 0);
+    setFlag(kFlagSubtract, false);
+    setFlag(kFlagHalfCarry, false);
+    setFlag(kFlagCarry, false);
+}
+
+void Cpu::srl_r(uint8_t& reg) {
+    const bool carry = (reg & 0x01) != 0;
+    reg = static_cast<uint8_t>(reg >> 1);
+    setFlag(kFlagZero, reg == 0);
+    setFlag(kFlagSubtract, false);
+    setFlag(kFlagHalfCarry, false);
+    setFlag(kFlagCarry, carry);
+}
+
+void Cpu::bit_b(uint8_t bitIndex, uint8_t value) {
+    setFlag(kFlagZero, ((value >> bitIndex) & 0x01) == 0);
+    setFlag(kFlagSubtract, false);
+    setFlag(kFlagHalfCarry, true);
+}
+
+void Cpu::res_b(uint8_t bitIndex, uint8_t& reg) {
+    reg = static_cast<uint8_t>(reg & ~(1u << bitIndex));
+}
+
+void Cpu::set_b(uint8_t bitIndex, uint8_t& reg) {
+    reg = static_cast<uint8_t>(reg | (1u << bitIndex));
+}
+
+// maps a cb-opcode register index to its register index 6 means HL
+// and is handled by the caller since it needs a memory read/write instead
+uint8_t* Cpu::cbRegisterPtr(uint8_t regIndex) {
+    switch (regIndex) {
+    case 0: return &b;
+    case 1: return &c;
+    case 2: return &d;
+    case 3: return &e;
+    case 4: return &h;
+    case 5: return &l;
+    case 7: return &a;
+    default: return nullptr;
+    }
+}
+
 int Cpu::serviceInterrupt(Mmu& mmu, uint8_t mask, uint16_t vector) {
     mmu.write8(kIfAddress, static_cast<uint8_t>(mmu.read8(kIfAddress) & ~mask));
     ime = false;
@@ -842,6 +944,9 @@ int Cpu::executeOpcode(Mmu& mmu, uint8_t opcode) {
         pc = pop16(mmu);
         return 16;
 
+    case 0xCB: // CB prefix
+        return executeCbOpcode(mmu, fetch8(mmu));
+
     case 0xCC: { // CALL Z,a16
         const uint16_t address = fetch16(mmu);
         if (getFlag(kFlagZero)) {
@@ -1025,6 +1130,61 @@ int Cpu::executeOpcode(Mmu& mmu, uint8_t opcode) {
         // unimplemented opcodes are noop
         return 4;
     }
+}
+
+int Cpu::executeCbOpcode(Mmu& mmu, uint8_t opcode) {
+    const uint8_t regIndex = opcode & 0x07;
+    const bool isMemory = regIndex == 6;
+
+    if (opcode < 0x40) { // RLC/RRC/RL/RR/SLA/SRA/SWAP/SRL r
+        const uint8_t group = opcode >> 3;
+        uint8_t value = isMemory ? mmu.read8(hl()) : *cbRegisterPtr(regIndex);
+        switch (group) {
+        case 0: rlc_r(value); break;
+        case 1: rrc_r(value); break;
+        case 2: rl_r(value); break;
+        case 3: rr_r(value); break;
+        case 4: sla_r(value); break;
+        case 5: sra_r(value); break;
+        case 6: swap_r(value); break;
+        default: srl_r(value); break;
+        }
+        if (isMemory) {
+            mmu.write8(hl(), value);
+            return 16;
+        }
+        *cbRegisterPtr(regIndex) = value;
+        return 8;
+    }
+
+    const uint8_t bitIndex = (opcode >> 3) & 0x07;
+
+    if (opcode < 0x80) { // BIT b,r
+        const uint8_t value = isMemory ? mmu.read8(hl()) : *cbRegisterPtr(regIndex);
+        bit_b(bitIndex, value);
+        return isMemory ? 12 : 8;
+    }
+
+    if (opcode < 0xC0) { // RES b,r
+        if (isMemory) {
+            uint8_t value = mmu.read8(hl());
+            res_b(bitIndex, value);
+            mmu.write8(hl(), value);
+            return 16;
+        }
+        res_b(bitIndex, *cbRegisterPtr(regIndex));
+        return 8;
+    }
+
+    // SET b,r
+    if (isMemory) {
+        uint8_t value = mmu.read8(hl());
+        set_b(bitIndex, value);
+        mmu.write8(hl(), value);
+        return 16;
+    }
+    set_b(bitIndex, *cbRegisterPtr(regIndex));
+    return 8;
 }
 
 } // namespace gb

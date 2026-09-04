@@ -74,10 +74,24 @@ private:
     void or_a(uint8_t value);
     void cp_a(uint8_t value);
 
+    void rlc_r(uint8_t& reg);
+    void rrc_r(uint8_t& reg);
+    void rl_r(uint8_t& reg);
+    void rr_r(uint8_t& reg);
+    void sla_r(uint8_t& reg);
+    void sra_r(uint8_t& reg);
+    void swap_r(uint8_t& reg);
+    void srl_r(uint8_t& reg);
+    void bit_b(uint8_t bitIndex, uint8_t value);
+    void res_b(uint8_t bitIndex, uint8_t& reg);
+    void set_b(uint8_t bitIndex, uint8_t& reg);
+    uint8_t* cbRegisterPtr(uint8_t regIndex);
+
     // Returns cycles for the serviced interrupt, or 0 if none is pending.
     int handleInterrupts(Mmu& mmu);
     int serviceInterrupt(Mmu& mmu, uint8_t mask, uint16_t vector);
     int executeOpcode(Mmu& mmu, uint8_t opcode);
+    int executeCbOpcode(Mmu& mmu, uint8_t opcode);
 };
 
 } // namespace gb
