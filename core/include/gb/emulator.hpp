@@ -26,13 +26,15 @@ public:
     Mmu& mmu() { return mmu_; }
 
 private:
-    Cpu cpu_;
+    // Declaration order matters: cartridge_/ppu_ must construct before mmu_,
+    // which holds references to them.
+    Cartridge cartridge_;
     Ppu ppu_;
-    Mmu mmu_;
     Apu apu_;
     Timer timer_;
     Joypad joypad_;
-    Cartridge cartridge_;
+    Mmu mmu_{cartridge_, ppu_};
+    Cpu cpu_;
 };
 
 } // namespace gb

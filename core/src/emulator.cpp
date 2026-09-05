@@ -10,7 +10,7 @@ void Emulator::reset() {
 }
 
 void Emulator::loadRom(const uint8_t* data, size_t size) {
-    mmu_.loadRom(data, size);
+    cartridge_.load(data, size);
 }
 
 int Emulator::step() {
