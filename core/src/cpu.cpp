@@ -131,6 +131,40 @@ void Cpu::cp_a(uint8_t value) {
     setFlag(kFlagSubtract, true);
 }
 
+void Cpu::add_hl(uint16_t value) {
+    const uint32_t result = static_cast<uint32_t>(hl()) + value;
+    setFlag(kFlagHalfCarry, ((hl() & 0x0FFF) + (value & 0x0FFF)) > 0x0FFF);
+    setFlag(kFlagCarry, result > 0xFFFF);
+    setFlag(kFlagSubtract, false);
+    setHl(static_cast<uint16_t>(result));
+}
+
+void Cpu::daa() {
+    uint8_t adjustment = 0;
+    bool carry = getFlag(kFlagCarry);
+    if (getFlag(kFlagSubtract)) {
+        if (getFlag(kFlagHalfCarry)) {
+            adjustment += 0x06;
+        }
+        if (carry) {
+            adjustment += 0x60;
+        }
+        a = static_cast<uint8_t>(a - adjustment);
+    } else {
+        if (getFlag(kFlagHalfCarry) || (a & 0x0F) > 0x09) {
+            adjustment += 0x06;
+        }
+        if (carry || a > 0x99) {
+            adjustment += 0x60;
+            carry = true;
+        }
+        a = static_cast<uint8_t>(a + adjustment);
+    }
+    setFlag(kFlagCarry, carry);
+    setFlag(kFlagHalfCarry, false);
+    setFlag(kFlagZero, a == 0);
+}
+
 void Cpu::rlc_r(uint8_t& reg) {
     const bool carry = (reg & 0x80) != 0;
     reg = static_cast<uint8_t>((reg << 1) | (carry ? 0x01 : 0x00));
@@ -308,12 +342,21 @@ int Cpu::executeOpcode(Mmu& mmu, uint8_t opcode) {
         ld_r_d8(b, fetch8(mmu));
         return 8;
 
+    case 0x07: // RLCA
+        rlc_r(a);
+        setFlag(kFlagZero, false);
+        return 4;
+
     case 0x08: { // LD (a16),SP
         const uint16_t address = fetch16(mmu);
         mmu.write8(address, static_cast<uint8_t>(sp & 0xFF));
         mmu.write8(static_cast<uint16_t>(address + 1), static_cast<uint8_t>(sp >> 8));
         return 20;
     }
+
+    case 0x09: // ADD HL,BC
+        add_hl(bc());
+        return 8;
 
     case 0x0A: // LD A,(BC)
         a = mmu.read8(bc());
@@ -333,6 +376,11 @@ int Cpu::executeOpcode(Mmu& mmu, uint8_t opcode) {
     case 0x0E: // LD C,d8
         ld_r_d8(c, fetch8(mmu));
         return 8;
+
+    case 0x0F: // RRCA
+        rrc_r(a);
+        setFlag(kFlagZero, false);
+        return 4;
 
     case 0x10: // STOP
         fetch8(mmu);
@@ -362,11 +410,20 @@ int Cpu::executeOpcode(Mmu& mmu, uint8_t opcode) {
         ld_r_d8(d, fetch8(mmu));
         return 8;
 
+    case 0x17: // RLA
+        rl_r(a);
+        setFlag(kFlagZero, false);
+        return 4;
+
     case 0x18: { // JR r8
       const int8_t offset = static_cast<int8_t>(fetch8(mmu));
       pc = static_cast<uint16_t>(pc + offset);
       return 12;
     }
+
+    case 0x19: // ADD HL,DE
+        add_hl(de());
+        return 8;
 
     case 0x1A: // LD A,(DE)
         a = mmu.read8(de());
@@ -386,6 +443,11 @@ int Cpu::executeOpcode(Mmu& mmu, uint8_t opcode) {
     case 0x1E: // LD E,d8
         ld_r_d8(e, fetch8(mmu));
         return 8;
+
+    case 0x1F: // RRA
+        rr_r(a);
+        setFlag(kFlagZero, false);
+        return 4;
 
     case 0x20: // JR NZ,r8
         if (!getFlag(kFlagZero)) {
@@ -421,6 +483,10 @@ int Cpu::executeOpcode(Mmu& mmu, uint8_t opcode) {
         ld_r_d8(h, fetch8(mmu));
         return 8;
 
+    case 0x27: // DAA
+        daa();
+        return 4;
+
     case 0x28: // JR Z,r8
         if (getFlag(kFlagZero)) {
             const int8_t offset = static_cast<int8_t>(fetch8(mmu));
@@ -430,6 +496,10 @@ int Cpu::executeOpcode(Mmu& mmu, uint8_t opcode) {
             fetch8(mmu);
             return 8;
         }
+
+    case 0x29: // ADD HL,HL
+        add_hl(hl());
+        return 8;
 
     case 0x2A: { // LD A,(HL+)
         const uint16_t address = hl();
@@ -452,6 +522,12 @@ int Cpu::executeOpcode(Mmu& mmu, uint8_t opcode) {
     case 0x2E: // LD L,d8
         ld_r_d8(l, fetch8(mmu));
         return 8;
+
+    case 0x2F: // CPL
+        a = static_cast<uint8_t>(~a);
+        setFlag(kFlagSubtract, true);
+        setFlag(kFlagHalfCarry, true);
+        return 4;
 
     case 0x30: // JR NC,r8
         if (!getFlag(kFlagCarry)) {
@@ -493,6 +569,12 @@ int Cpu::executeOpcode(Mmu& mmu, uint8_t opcode) {
         mmu.write8(hl(), fetch8(mmu));
         return 12;
 
+    case 0x37: // SCF
+        setFlag(kFlagSubtract, false);
+        setFlag(kFlagHalfCarry, false);
+        setFlag(kFlagCarry, true);
+        return 4;
+
     case 0x38: // JR C,r8
         if (getFlag(kFlagCarry)) {
             const int8_t offset = static_cast<int8_t>(fetch8(mmu));
@@ -502,6 +584,10 @@ int Cpu::executeOpcode(Mmu& mmu, uint8_t opcode) {
             fetch8(mmu);
             return 8;
         }
+
+    case 0x39: // ADD HL,SP
+        add_hl(sp);
+        return 8;
 
     case 0x3A: { // LD A,(HL-)
         const uint16_t address = hl();
@@ -524,6 +610,12 @@ int Cpu::executeOpcode(Mmu& mmu, uint8_t opcode) {
     case 0x3E: // LD A,d8
         ld_r_d8(a, fetch8(mmu));
         return 8;
+
+    case 0x3F: // CCF
+        setFlag(kFlagSubtract, false);
+        setFlag(kFlagHalfCarry, false);
+        setFlag(kFlagCarry, !getFlag(kFlagCarry));
+        return 4;
 
     case 0x40: // LD B,B
         b = b;
@@ -1131,6 +1223,17 @@ int Cpu::executeOpcode(Mmu& mmu, uint8_t opcode) {
         pc = 0x20;
         return 16;
 
+    case 0xE8: { // ADD SP,r8
+        const int8_t offset = static_cast<int8_t>(fetch8(mmu));
+        const uint8_t unsignedOffset = static_cast<uint8_t>(offset);
+        setFlag(kFlagZero, false);
+        setFlag(kFlagSubtract, false);
+        setFlag(kFlagHalfCarry, ((sp & 0x0F) + (unsignedOffset & 0x0F)) > 0x0F);
+        setFlag(kFlagCarry, ((sp & 0xFF) + unsignedOffset) > 0xFF);
+        sp = static_cast<uint16_t>(sp + offset);
+        return 16;
+    }
+
     case 0xE9: // JP (HL)
         pc = hl();
         return 4;
@@ -1214,7 +1317,10 @@ int Cpu::executeOpcode(Mmu& mmu, uint8_t opcode) {
         return 16;
 
     default:
-        // unimplemented opcodes are noop
+        // unimplemented opcodes are noop,
+        // currently only applies to illegal opcodes
+        // that shouldn't be used in games and
+        // would crash on real hardware
         return 4;
     }
 }

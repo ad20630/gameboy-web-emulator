@@ -73,6 +73,8 @@ private:
     void xor_a(uint8_t value);
     void or_a(uint8_t value);
     void cp_a(uint8_t value);
+    void add_hl(uint16_t value);
+    void daa();
 
     void rlc_r(uint8_t& reg);
     void rrc_r(uint8_t& reg);
