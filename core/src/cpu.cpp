@@ -383,9 +383,9 @@ int Cpu::executeOpcode(Mmu& mmu, uint8_t opcode) {
         return 4;
 
     case 0x10: // STOP
-        fetch8(mmu);
-        halted = true;
-        return 4;
+      fetch8(mmu);
+      mmu.write8(0xFF04, 0);
+      return 4;
 
     case 0x11: // LD DE,d16
         setDe(fetch16(mmu));
