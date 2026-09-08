@@ -20,8 +20,8 @@ int Emulator::step() {
     if (timer_.tick(cycles)) {
         mmu_.requestInterrupt(Cpu::kInterruptTimer);
     }
-    if (ppu_.tick(cycles)) {
-        mmu_.requestInterrupt(Cpu::kInterruptVBlank);
+    if (const uint8_t ppuInterrupts = ppu_.tick(cycles)) {
+        mmu_.requestInterrupt(ppuInterrupts);
     }
     return cycles;
 }
