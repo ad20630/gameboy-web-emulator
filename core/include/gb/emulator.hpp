@@ -33,7 +33,7 @@ private:
     Apu apu_;
     Timer timer_;
     Joypad joypad_;
-    Mmu mmu_{cartridge_, ppu_};
+    Mmu mmu_{cartridge_, ppu_, timer_};
     Cpu cpu_;
 };
 

@@ -7,18 +7,21 @@ namespace gb {
 
 class Cartridge;
 class Ppu;
+class Timer;
 
 class Mmu {
 public:
-    Mmu(Cartridge& cartridge, Ppu& ppu);
+    Mmu(Cartridge& cartridge, Ppu& ppu, Timer& timer);
     ~Mmu();
 
     uint8_t read8(uint16_t address) const;
     void write8(uint16_t address, uint8_t value);
+    void requestInterrupt(uint8_t mask);
 
 private:
     Cartridge& cartridge_;
     Ppu& ppu_;
+    Timer& timer_;
 
     std::array<uint8_t, 0x2000> wram_{};
     std::array<uint8_t, 0x80> hram_{};

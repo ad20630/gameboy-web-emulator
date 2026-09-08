@@ -2,15 +2,24 @@
 
 #include "gb/cartridge.hpp"
 #include "gb/ppu.hpp"
+#include "gb/timer.hpp"
 
 namespace gb {
 
 namespace {
 constexpr uint16_t kDmaRegister = 0xFF46;
+constexpr uint16_t kIfAddress = 0xFF0F;
+constexpr uint16_t kDivAddress = 0xFF04;
+constexpr uint16_t kTacAddress = 0xFF07;
 }
 
-Mmu::Mmu(Cartridge& cartridge, Ppu& ppu) : cartridge_(cartridge), ppu_(ppu) {}
+Mmu::Mmu(Cartridge& cartridge, Ppu& ppu, Timer& timer)
+    : cartridge_(cartridge), ppu_(ppu), timer_(timer) {}
 Mmu::~Mmu() = default;
+
+void Mmu::requestInterrupt(uint8_t mask) {
+    io_[kIfAddress - 0xFF00] |= mask;
+}
 
 uint8_t Mmu::read8(uint16_t address) const {
     if (address < 0x8000) {
@@ -68,6 +77,9 @@ void Mmu::write8(uint16_t address, uint8_t value) {
 }
 
 uint8_t Mmu::readIo(uint16_t address) const {
+    if (address >= kDivAddress && address <= kTacAddress) {
+        return timer_.read8(address);
+    }
     if (address >= 0xFF40 && address <= 0xFF4B) {
         return ppu_.readRegister(address);
     }
@@ -75,6 +87,10 @@ uint8_t Mmu::readIo(uint16_t address) const {
 }
 
 void Mmu::writeIo(uint16_t address, uint8_t value) {
+    if (address >= kDivAddress && address <= kTacAddress) {
+        timer_.write8(address, value);
+        return;
+    }
     if (address == kDmaRegister) {
         ppu_.writeRegister(address, value);
         performOamDma(value);
