@@ -24,6 +24,7 @@ public:
 
     Cpu& cpu() { return cpu_; }
     Mmu& mmu() { return mmu_; }
+    Ppu& ppu() { return ppu_; }
 
 private:
     // Declaration order matters: cartridge_/ppu_ must construct before mmu_,
