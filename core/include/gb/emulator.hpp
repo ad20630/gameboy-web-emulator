@@ -25,16 +25,17 @@ public:
     Cpu& cpu() { return cpu_; }
     Mmu& mmu() { return mmu_; }
     Ppu& ppu() { return ppu_; }
+    Joypad& joypad() { return joypad_; }
 
 private:
-    // Declaration order matters: cartridge_/ppu_ must construct before mmu_,
-    // which holds references to them.
+    // Declaration order matters: cartridge_/ppu_/timer_/joypad_ must
+    // construct before mmu_, which holds references to them.
     Cartridge cartridge_;
     Ppu ppu_;
     Apu apu_;
     Timer timer_;
     Joypad joypad_;
-    Mmu mmu_{cartridge_, ppu_, timer_};
+    Mmu mmu_{cartridge_, ppu_, timer_, joypad_};
     Cpu cpu_;
 };
 
