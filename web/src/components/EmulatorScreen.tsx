@@ -10,6 +10,10 @@ type LoadStatus = "loading" | "ready" | "error";
 const SCREEN_WIDTH = 160;
 const SCREEN_HEIGHT = 144;
 
+//runs at the gameboy frame rate independent of refresh rate
+const GB_FRAME_MS = (70224 / 4194304) * 1000;
+const MAX_FRAMES_PER_RAF = 4;
+
 type Palette = readonly [number, number, number][];
 
 // Shade index (0 = lightest) -> RGB, as produced by Ppu::framebuffer().
@@ -163,11 +167,40 @@ export function EmulatorScreen() {
 
     let running = true;
     let frameId: number;
+    let lastTimestamp: number | null = null;
+    let accumulatedMs = 0;
 
-    const loop = () => {
+    const loop = (timestamp: number) => {
       if (!running) return;
-      emulatorRef.current?.runFrame();
-      drawFrame();
+
+      if (lastTimestamp === null) {
+        lastTimestamp = timestamp;
+      }
+      let deltaMs = timestamp - lastTimestamp;
+      lastTimestamp = timestamp;
+      // If the tab was backgrounded or a huge stall happened, don't try to
+      // burn through minutes of emulated frames catching up.
+      if (deltaMs > 1000) {
+        deltaMs = GB_FRAME_MS;
+      }
+      accumulatedMs += deltaMs;
+
+      let framesRun = 0;
+      while (
+        accumulatedMs >= GB_FRAME_MS &&
+        framesRun < MAX_FRAMES_PER_RAF
+      ) {
+        emulatorRef.current?.runFrame();
+        accumulatedMs -= GB_FRAME_MS;
+        framesRun++;
+      }
+      // Dropped time from an oversaturated frame budget shouldn't linger and
+      // cause a burst of catch-up frames later.
+      if (framesRun === MAX_FRAMES_PER_RAF) {
+        accumulatedMs = 0;
+      }
+
+      if (framesRun > 0) drawFrame();
       frameId = requestAnimationFrame(loop);
     };
     frameId = requestAnimationFrame(loop);
