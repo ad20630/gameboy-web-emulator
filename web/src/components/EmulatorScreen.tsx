@@ -10,13 +10,86 @@ type LoadStatus = "loading" | "ready" | "error";
 const SCREEN_WIDTH = 160;
 const SCREEN_HEIGHT = 144;
 
+type Palette = readonly [number, number, number][];
+
 // Shade index (0 = lightest) -> RGB, as produced by Ppu::framebuffer().
-const SHADE_COLORS: ReadonlyArray<readonly [number, number, number]> = [
-  [255, 255, 255],
-  [170, 170, 170],
-  [85, 85, 85],
-  [0, 0, 0],
-];
+const PALETTES: Record<string, Palette> = {
+  grayscale: [
+    [255, 255, 255],
+    [170, 170, 170],
+    [85, 85, 85],
+    [0, 0, 0],
+  ],
+  "dmg-green": [
+    [155, 188, 15],
+    [139, 172, 15],
+    [48, 98, 48],
+    [15, 56, 15],
+  ],
+  pocket: [
+    [255, 255, 255],
+    [166, 166, 166],
+    [99, 99, 99],
+    [33, 33, 33],
+  ],
+  inverted: [
+    [0, 0, 0],
+    [85, 85, 85],
+    [170, 170, 170],
+    [255, 255, 255],
+  ],
+  "red": [
+    [253, 238, 238],
+    [232, 180, 180],
+    [185, 101, 101],
+    [92, 38, 38],
+  ],
+  "blue": [
+    [237, 243, 250],
+    [175, 201, 224],
+    [95, 132, 172],
+    [38, 65, 92],
+  ],
+  "green": [
+    [238, 253, 238],
+    [180, 232, 180],
+    [101, 185, 101],
+    [38, 92, 38],
+  ],
+  "orange": [
+    [253, 244, 235],
+    [232, 196, 166],
+    [185, 127, 90],
+    [92, 58, 38],
+  ],
+  "purple": [
+    [247, 238, 253],
+    [208, 180, 232],
+    [143, 101, 185],
+    [62, 38, 92],
+  ],
+  "yellow": [
+    [253, 251, 230],
+    [230, 220, 150],
+    [185, 170, 80],
+    [92, 85, 35],
+  ],
+};
+
+const PALETTE_LABELS: Record<keyof typeof PALETTES, string> = {
+  grayscale: "Grayscale",
+  "dmg-green": "DMG Green",
+  pocket: "Pocket",
+  inverted: "Inverted",
+  "red": "Red",
+  "blue": "Blue",
+  "green": "Green",
+  "orange": "Orange",
+  "purple": "Purple",
+  "yellow": "Yellow",
+};
+
+const DEFAULT_PALETTE = "grayscale";
 
 const KEY_TO_BUTTON: Record<string, keyof EmulatorModule["Button"]> = {
   ArrowRight: "Right",
@@ -36,6 +109,7 @@ export function EmulatorScreen() {
   const imageDataRef = useRef<ImageData | null>(null);
   const [status, setStatus] = useState<LoadStatus>("loading");
   const [romLoaded, setRomLoaded] = useState(false);
+  const [paletteKey, setPaletteKey] = useState<keyof typeof PALETTES>(DEFAULT_PALETTE);
 
   useEffect(() => {
     let cancelled = false;
@@ -70,9 +144,10 @@ export function EmulatorScreen() {
     }
     const imageData = imageDataRef.current;
     const framebuffer = emulator.getFramebuffer();
+    const palette = PALETTES[paletteKey];
 
     for (let i = 0; i < framebuffer.length; i++) {
-      const [r, g, b] = SHADE_COLORS[framebuffer[i] & 0x03];
+      const [r, g, b] = palette[framebuffer[i] & 0x03];
       const offset = i * 4;
       imageData.data[offset] = r;
       imageData.data[offset + 1] = g;
@@ -81,7 +156,7 @@ export function EmulatorScreen() {
     }
 
     ctx.putImageData(imageData, 0, 0);
-  }, []);
+  }, [paletteKey]);
 
   useEffect(() => {
     if (!romLoaded) return;
@@ -102,6 +177,12 @@ export function EmulatorScreen() {
       cancelAnimationFrame(frameId);
     };
   }, [romLoaded, drawFrame]);
+
+  // Repaint the current frame immediately when the palette changes, even if
+  // the emulator isn't running (e.g. before a ROM is loaded).
+  useEffect(() => {
+    drawFrame();
+  }, [drawFrame]);
 
   useEffect(() => {
     const handleKey = (pressed: boolean) => (event: KeyboardEvent) => {
@@ -149,13 +230,28 @@ export function EmulatorScreen() {
         className="border border-neutral-700 bg-black"
         style={{ imageRendering: "pixelated", width: 480, height: 432 }}
       />
-      <input
-        type="file"
-        accept=".gb,.gbc"
-        disabled={status !== "ready"}
-        onChange={handleFileChange}
-        className="text-sm text-neutral-300"
-      />
+      <div className="flex items-center gap-3">
+        <input
+          type="file"
+          accept=".gb,.gbc"
+          disabled={status !== "ready"}
+          onChange={handleFileChange}
+          className="text-sm text-neutral-300"
+        />
+        <select
+          value={paletteKey}
+          onChange={(event) =>
+            setPaletteKey(event.target.value as keyof typeof PALETTES)
+          }
+          className="rounded border border-neutral-700 bg-neutral-900 px-2 py-1 text-sm text-neutral-300"
+        >
+          {Object.entries(PALETTE_LABELS).map(([key, label]) => (
+            <option key={key} value={key}>
+              {label}
+            </option>
+          ))}
+        </select>
+      </div>
       <p className="text-sm text-neutral-400">
         Status: {status}
         {romLoaded ? " · running" : ""}
