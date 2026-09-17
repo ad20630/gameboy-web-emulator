@@ -95,6 +95,11 @@ const PALETTE_LABELS: Record<keyof typeof PALETTES, string> = {
 
 const DEFAULT_PALETTE = "grayscale";
 
+// Bundled ROMs served from web/public/roms, selectable without a file picker.
+const TEST_ROMS: Record<string, string> = {
+  "cpu_instrs.gb": "/roms/cpu_instrs.gb",
+};
+
 const KEY_TO_BUTTON: Record<string, keyof EmulatorModule["Button"]> = {
   ArrowRight: "Right",
   ArrowLeft: "Left",
@@ -114,6 +119,7 @@ export function EmulatorScreen() {
   const [status, setStatus] = useState<LoadStatus>("loading");
   const [romLoaded, setRomLoaded] = useState(false);
   const [paletteKey, setPaletteKey] = useState<keyof typeof PALETTES>(DEFAULT_PALETTE);
+  const [selectedTestRom, setSelectedTestRom] = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -241,17 +247,26 @@ export function EmulatorScreen() {
     };
   }, []);
 
+  const loadRomBytes = (bytes: Uint8Array) => {
+    const emulator = emulatorRef.current;
+    if (!emulator) return;
+    emulator.reset();
+    emulator.loadRom(bytes);
+    setRomLoaded(true);
+  };
+
   const handleFileChange = async (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
     const file = event.target.files?.[0];
-    const emulator = emulatorRef.current;
-    if (!file || !emulator) return;
+    if (!file) return;
+    loadRomBytes(new Uint8Array(await file.arrayBuffer()));
+  };
 
-    const buffer = new Uint8Array(await file.arrayBuffer());
-    emulator.reset();
-    emulator.loadRom(buffer);
-    setRomLoaded(true);
+  const handleLoadTestRom = async () => {
+    if (!selectedTestRom) return;
+    const response = await fetch(selectedTestRom);
+    loadRomBytes(new Uint8Array(await response.arrayBuffer()));
   };
 
   return (
@@ -263,6 +278,31 @@ export function EmulatorScreen() {
         className="border border-neutral-700 bg-black"
         style={{ imageRendering: "pixelated", width: 480, height: 432 }}
       />
+      <div className="flex items-center gap-3">
+        <select
+          value={selectedTestRom}
+          disabled={status !== "ready"}
+          onChange={(event) => setSelectedTestRom(event.target.value)}
+          className="rounded border border-neutral-700 bg-neutral-900 px-2 py-1 text-sm text-neutral-300"
+        >
+          <option value="" disabled>
+            Select test ROM...
+          </option>
+          {Object.entries(TEST_ROMS).map(([label, url]) => (
+            <option key={url} value={url}>
+              {label}
+            </option>
+          ))}
+        </select>
+        <button
+          type="button"
+          onClick={handleLoadTestRom}
+          disabled={status !== "ready" || !selectedTestRom}
+          className="rounded border border-neutral-700 bg-neutral-900 px-3 py-1 text-sm text-neutral-300 disabled:opacity-50"
+        >
+          Load
+        </button>
+      </div>
       <div className="flex items-center gap-3">
         <input
           type="file"
