@@ -18,29 +18,113 @@ type Palette = readonly [number, number, number][];
 
 // Shade index (0 = lightest) -> RGB, as produced by Ppu::framebuffer().
 const PALETTES: Record<string, Palette> = {
-  grayscale: [
+  "grayscale": [
     [255, 255, 255],
     [170, 170, 170],
     [85, 85, 85],
     [0, 0, 0],
   ],
-  "dmg-green": [
+  "dmg": [
     [155, 188, 15],
     [139, 172, 15],
     [48, 98, 48],
     [15, 56, 15],
   ],
-  pocket: [
-    [255, 255, 255],
-    [166, 166, 166],
-    [99, 99, 99],
-    [33, 33, 33],
+  "light": [
+    [29, 222, 206],
+    [25, 199, 179],
+    [22, 165, 150],
+    [11, 122, 109],
   ],
-  inverted: [
+  "pocket": [
+    [196, 207, 161],
+    [139, 149, 109],
+    [77, 83, 60],
+    [31, 31, 31],
+  ],
+  "inverted": [
     [0, 0, 0],
     [85, 85, 85],
     [170, 170, 170],
     [255, 255, 255],
+  ],
+  "splash-down": [
+    [255, 255, 165],
+    [255, 148, 148],
+    [148, 148, 255],
+    [0, 0, 0],
+  ],
+  "splash-down-a": [
+    [255, 255, 255],
+    [255, 255, 0],
+    [255, 0, 0],
+    [0, 0, 0],
+  ],
+  "splash-down-b": [
+    [255, 255, 255],
+    [255, 255, 0],
+    [123, 74, 0],
+    [0, 0, 0],
+  ],
+  "splash-left": [
+    [255, 255, 255],
+    [99, 165, 255],
+    [0, 0, 255],
+    [0, 0, 0],
+  ],
+  "splash-left-a": [
+    [255, 255, 255],
+    [140, 140, 222],
+    [82, 82, 140],
+    [0, 0, 0],
+  ],
+  "splash-left-b": [
+    [255, 255, 255],
+    [165, 165, 165],
+    [82, 82, 82],
+    [0, 0, 0],
+  ],
+  "splash-right": [
+    [255, 255, 255],
+    [82, 255, 0],
+    [255, 66, 0],
+    [0, 0, 0],
+  ],
+  "splash-right-a": [
+    [255, 255, 255],
+    [123, 255, 49],
+    [0, 99, 197],
+    [0, 0, 0],
+  ],
+  "splash-right-b": [
+    [0, 0, 0],
+    [0, 132, 132],
+    [255, 222, 0],
+    [255, 255, 255],
+  ],
+  "splash-up": [
+    [255, 255, 255],
+    [255, 173, 99],
+    [132, 49, 0],
+    [0, 0, 0],
+  ],
+  "splash-up-a": [
+    [255, 255, 255],
+    [255, 132, 132],
+    [148, 58, 58],
+    [0, 0, 0],
+  ],
+  "splash-up-b": [
+    [255, 230, 197],
+    [206, 156, 132],
+    [132, 107, 41],
+    [90, 49, 8],
+  ],
+  "soft-dmg": [
+    [218, 251, 221],
+    [173, 211, 172],
+    [82, 156, 144],
+    [16, 87, 97],
   ],
   "red": [
     [253, 238, 238],
@@ -61,10 +145,10 @@ const PALETTES: Record<string, Palette> = {
     [38, 92, 38],
   ],
   "orange": [
-    [253, 244, 235],
-    [232, 196, 166],
-    [185, 127, 90],
-    [92, 58, 38],
+    [253, 232, 210],
+    [240, 175, 110],
+    [200, 120, 60],
+    [110, 60, 25],
   ],
   "purple": [
     [247, 238, 253],
@@ -78,22 +162,124 @@ const PALETTES: Record<string, Palette> = {
     [185, 170, 80],
     [92, 85, 35],
   ],
+  "pink": [
+    [253, 238, 245],
+    [235, 170, 195],
+    [185, 90, 130],
+    [92, 35, 60],
+  ],
+  "brown": [
+    [245, 230, 210],
+    [210, 175, 140],
+    [150, 110, 75],
+    [75, 50, 30],
+  ],
+  "amber-dusk": [
+    [255, 240, 214],
+    [240, 165, 90],
+    [50, 90, 110],
+    [15, 30, 45],
+  ],
+  "coral-reef": [
+    [255, 235, 205],
+    [250, 140, 110],
+    [40, 120, 130],
+    [10, 40, 55],
+  ],
+  "neon-tide": [
+    [255, 214, 240],
+    [255, 110, 190],
+    [40, 130, 180],
+    [10, 20, 60],
+  ],
+  "frostbite": [
+    [214, 230, 255],
+    [140, 170, 210],
+    [150, 90, 60],
+    [80, 30, 20],
+  ],
+  "tundra": [
+    [205, 245, 240],
+    [120, 180, 175],
+    [150, 100, 60],
+    [70, 35, 15],
+  ],
+  "nightfire": [
+    [230, 220, 255],
+    [150, 140, 200],
+    [170, 80, 70],
+    [70, 20, 30],
+  ],
 };
 
 const PALETTE_LABELS: Record<keyof typeof PALETTES, string> = {
-  grayscale: "Grayscale",
-  "dmg-green": "DMG Green",
-  pocket: "Pocket",
-  inverted: "Inverted",
+  "grayscale": "Grayscale",
+  "dmg": "DMG",
+  "light": "Gameboy Light",
+  "pocket": "Gameboy Pocket",
+  "inverted": "Inverted",
+  "splash-down": "Down",
+  "splash-down-a": "Down + A",
+  "splash-down-b": "Down + B",
+  "splash-left": "Left",
+  "splash-left-a": "Left + A",
+  "splash-left-b": "Left + B",
+  "splash-right": "Right",
+  "splash-right-a": "Right + A",
+  "splash-right-b": "Right + B",
+  "splash-up": "Up",
+  "splash-up-a": "Up + A",
+  "splash-up-b": "Up + B",
+  "soft-dmg": "Soft DMG",
   "red": "Red",
   "blue": "Blue",
   "green": "Green",
   "orange": "Orange",
   "purple": "Purple",
   "yellow": "Yellow",
+  "pink": "Pink",
+  "brown": "Brown",
+  "amber-dusk": "Amber Dusk",
+  "coral-reef": "Coral Reef",
+  "neon-tide": "Neon Tide",
+  "frostbite": "Frostbite",
+  "tundra": "Tundra",
+  "nightfire": "Nightfire",
 };
 
 const DEFAULT_PALETTE = "grayscale";
+
+const CUSTOM_PALETTE_KEYS = new Set([
+  "soft-dmg",
+  "red",
+  "blue",
+  "green",
+  "orange",
+  "purple",
+  "yellow",
+  "pink",
+  "brown",
+  "amber-dusk",
+  "coral-reef",
+  "neon-tide",
+  "frostbite",
+  "tundra",
+  "nightfire",
+]);
+
+type PaletteGroup = "hardware" | "boot" | "custom";
+
+function paletteGroup(key: string): PaletteGroup {
+  if (key.startsWith("splash-")) return "boot";
+  if (CUSTOM_PALETTE_KEYS.has(key)) return "custom";
+  return "hardware";
+}
+
+const PALETTE_GROUP_LABELS: Record<PaletteGroup, string> = {
+  hardware: "Hardware",
+  boot: "GBC Boot Palettes",
+  custom: "Custom",
+};
 
 // Bundled ROMs served from web/public/roms, selectable without a file picker.
 const TEST_ROMS: Record<string, string> = {
@@ -318,10 +504,16 @@ export function EmulatorScreen() {
           }
           className="rounded border border-neutral-700 bg-neutral-900 px-2 py-1 text-sm text-neutral-300"
         >
-          {Object.entries(PALETTE_LABELS).map(([key, label]) => (
-            <option key={key} value={key}>
-              {label}
-            </option>
+          {(["hardware", "boot", "custom"] as const).map((group) => (
+            <optgroup key={group} label={PALETTE_GROUP_LABELS[group]}>
+              {Object.entries(PALETTE_LABELS)
+                .filter(([key]) => paletteGroup(key) === group)
+                .map(([key, label]) => (
+                  <option key={key} value={key}>
+                    {label}
+                  </option>
+                ))}
+            </optgroup>
           ))}
         </select>
       </div>
