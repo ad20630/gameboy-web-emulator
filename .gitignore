@@ -21,3 +21,6 @@ web/public/wasm/*.wasm.map
 # misc
 .DS_Store
 *.log
+
+#VSCode settings
+.vscode/

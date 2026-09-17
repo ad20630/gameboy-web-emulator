@@ -2,6 +2,11 @@
 
 namespace gb {
 
+namespace {
+// 4194304 Hz / ~59.7275 Hz refresh rate.
+constexpr int kCyclesPerFrame = 70224;
+} // namespace
+
 Emulator::Emulator() = default;
 Emulator::~Emulator() = default;
 
@@ -28,6 +33,17 @@ int Emulator::step() {
         mmu_.requestInterrupt(Cpu::kInterruptJoypad);
     }
     return cycles;
+}
+
+void Emulator::runFrame() {
+    int cyclesThisFrame = 0;
+    while (cyclesThisFrame < kCyclesPerFrame) {
+        cyclesThisFrame += step();
+    }
+}
+
+void Emulator::setButtonPressed(Joypad::Button button, bool pressed) {
+    joypad_.setButtonPressed(button, pressed);
 }
 
 } // namespace gb

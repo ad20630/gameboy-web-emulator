@@ -22,6 +22,11 @@ public:
     void loadRom(const uint8_t* data, size_t size);
     int step();
 
+    // Steps the emulator for one screen refresh's worth of cycles (~59.7 Hz).
+    void runFrame();
+
+    void setButtonPressed(Joypad::Button button, bool pressed);
+
     Cpu& cpu() { return cpu_; }
     Mmu& mmu() { return mmu_; }
     Ppu& ppu() { return ppu_; }
