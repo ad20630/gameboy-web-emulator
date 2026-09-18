@@ -17,7 +17,7 @@ interface PadButtonProps {
   disabled: boolean;
   onButtonChange: TouchControlsProps["onButtonChange"];
   className?: string;
-  children: ReactNode;
+  children?: ReactNode;
 }
 function PadButton({
   button,
@@ -82,36 +82,28 @@ export function TouchControls({ disabled, onButtonChange }: TouchControlsProps) 
           disabled={disabled}
           onButtonChange={onButtonChange}
           className={`${padButtonClass} rounded-t-md`}
-        >
-          ⭡
-        </PadButton>
+        />
         <div />
         <PadButton
           button="Left"
           disabled={disabled}
           onButtonChange={onButtonChange}
           className={`${padButtonClass} rounded-l-md`}
-        >
-          ⭠
-        </PadButton>
+        />
         <div />
         <PadButton
           button="Right"
           disabled={disabled}
           onButtonChange={onButtonChange}
           className={`${padButtonClass} rounded-r-md`}
-        >
-          ⭢
-        </PadButton>
+        />
         <div />
         <PadButton
           button="Down"
           disabled={disabled}
           onButtonChange={onButtonChange}
           className={`${padButtonClass} rounded-b-md`}
-        >
-          ⭣
-        </PadButton>
+        />
         <div />
       </div>
 
@@ -121,17 +113,13 @@ export function TouchControls({ disabled, onButtonChange }: TouchControlsProps) 
           disabled={disabled}
           onButtonChange={onButtonChange}
           className={`${padButtonClass} rounded-full px-3 py-1 text-[10px] uppercase tracking-wide`}
-        >
-          Select
-        </PadButton>
+        />
         <PadButton
           button="Start"
           disabled={disabled}
           onButtonChange={onButtonChange}
           className={`${padButtonClass} rounded-full px-3 py-1 text-[10px] uppercase tracking-wide`}
-        >
-          Start
-        </PadButton>
+        />
       </div>
 
       <div className="grid grid-cols-2 gap-3" style={{ width: 116 }}>
@@ -140,17 +128,13 @@ export function TouchControls({ disabled, onButtonChange }: TouchControlsProps) 
           disabled={disabled}
           onButtonChange={onButtonChange}
           className={`${padButtonClass} mt-6 h-14 w-14 rounded-full text-lg font-semibold`}
-        >
-          B
-        </PadButton>
+        />
         <PadButton
           button="A"
           disabled={disabled}
           onButtonChange={onButtonChange}
           className={`${padButtonClass} h-14 w-14 rounded-full text-lg font-semibold`}
-        >
-          A
-        </PadButton>
+        />
       </div>
     </div>
   );
