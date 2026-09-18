@@ -11,11 +11,6 @@ next-env.d.ts
 # C++ build output
 core/build/
 core/build-wasm/
-
-# generated wasm artifacts (produced by scripts/build-wasm.*)
-web/public/wasm/*.js
-web/public/wasm/*.wasm
-web/public/wasm/*.wasm.map
 !web/public/wasm/.gitkeep
 
 # misc
