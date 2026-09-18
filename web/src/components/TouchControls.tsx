@@ -83,7 +83,7 @@ export function TouchControls({ disabled, onButtonChange }: TouchControlsProps) 
           onButtonChange={onButtonChange}
           className={`${padButtonClass} rounded-t-md`}
         >
-          ▲
+          ⭡
         </PadButton>
         <div />
         <PadButton
@@ -92,7 +92,7 @@ export function TouchControls({ disabled, onButtonChange }: TouchControlsProps) 
           onButtonChange={onButtonChange}
           className={`${padButtonClass} rounded-l-md`}
         >
-          ◀
+          ⭠
         </PadButton>
         <div />
         <PadButton
@@ -101,7 +101,7 @@ export function TouchControls({ disabled, onButtonChange }: TouchControlsProps) 
           onButtonChange={onButtonChange}
           className={`${padButtonClass} rounded-r-md`}
         >
-          ▶
+          ⭢
         </PadButton>
         <div />
         <PadButton
@@ -110,7 +110,7 @@ export function TouchControls({ disabled, onButtonChange }: TouchControlsProps) 
           onButtonChange={onButtonChange}
           className={`${padButtonClass} rounded-b-md`}
         >
-          ▼
+          ⭣
         </PadButton>
         <div />
       </div>
