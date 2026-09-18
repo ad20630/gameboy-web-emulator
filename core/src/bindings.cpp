@@ -5,6 +5,7 @@
 #include <emscripten/bind.h>
 #include <emscripten/val.h>
 
+#include "gb/cartridge.hpp"
 #include "gb/emulator.hpp"
 #include "gb/joypad.hpp"
 #include "gb/ppu.hpp"
@@ -33,6 +34,22 @@ val getFramebuffer(gb::Emulator& emulator) {
         emulator.ppu().framebuffer()));
 }
 
+// Empty (zero-length) for carts with no cartridge RAM to save.
+val getCartRam(gb::Emulator& emulator) {
+    gb::Cartridge& cartridge = emulator.cartridge();
+    return val(typed_memory_view(cartridge.ramSize(), cartridge.ramData()));
+}
+
+// Restores previously-saved cartridge RAM; call after loadRom(). Sizes
+// smaller/larger than the cart's actual RAM are truncated, not rejected.
+void loadCartRam(gb::Emulator& emulator, const val& data) {
+    const size_t length = data["length"].as<size_t>();
+    std::vector<uint8_t> bytes(length);
+    val memoryView{typed_memory_view(length, bytes.data())};
+    memoryView.call<void>("set", data);
+    emulator.cartridge().setRamData(bytes.data(), bytes.size());
+}
+
 } // namespace
 
 EMSCRIPTEN_BINDINGS(gb_core) {
@@ -52,5 +69,7 @@ EMSCRIPTEN_BINDINGS(gb_core) {
         .function("loadRom", &loadRom)
         .function("runFrame", &gb::Emulator::runFrame)
         .function("getFramebuffer", &getFramebuffer)
+        .function("getCartRam", &getCartRam)
+        .function("loadCartRam", &loadCartRam)
         .function("setButtonPressed", &gb::Emulator::setButtonPressed);
 }

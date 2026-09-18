@@ -89,4 +89,9 @@ void Cartridge::write8(uint16_t address, uint8_t value) {
     ram_[offset] = value;
 }
 
+void Cartridge::setRamData(const uint8_t* data, size_t size) {
+    const size_t count = std::min(size, ram_.size());
+    std::copy(data, data + count, ram_.begin());
+}
+
 } // namespace gb

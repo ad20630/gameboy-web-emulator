@@ -17,6 +17,12 @@ public:
     uint8_t read8(uint16_t address) const;  // 0x0000-0x7FFF, 0xA000-0xBFFF
     void write8(uint16_t address, uint8_t value);
 
+    // Cartridge RAM access for battery-save persistence. ramSize() is 0 for
+    // carts with no RAM (nothing to persist).
+    const uint8_t* ramData() const { return ram_.data(); }
+    size_t ramSize() const { return ram_.size(); }
+    void setRamData(const uint8_t* data, size_t size);
+
 private:
     std::vector<uint8_t> rom_;
     std::vector<uint8_t> ram_;

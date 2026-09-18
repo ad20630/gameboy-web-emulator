@@ -18,6 +18,9 @@ export interface EmulatorInstance {
   loadRom(data: Uint8Array): void;
   runFrame(): void;
   getFramebuffer(): Uint8Array;
+  // Zero-length for carts with no cartridge RAM.
+  getCartRam(): Uint8Array;
+  loadCartRam(data: Uint8Array): void;
   setButtonPressed(button: EmulatorButtonValue, pressed: boolean): void;
 }
 

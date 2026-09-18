@@ -31,6 +31,7 @@ public:
     Mmu& mmu() { return mmu_; }
     Ppu& ppu() { return ppu_; }
     Joypad& joypad() { return joypad_; }
+    Cartridge& cartridge() { return cartridge_; }
 
 private:
     // Declaration order matters: cartridge_/ppu_/timer_/joypad_ must

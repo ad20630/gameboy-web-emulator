@@ -14,6 +14,43 @@ const SCREEN_HEIGHT = 144;
 const GB_FRAME_MS = (70224 / 4194304) * 1000;
 const MAX_FRAMES_PER_RAF = 4;
 
+const SAVE_KEY_PREFIX = "gb-save-";
+const AUTOSAVE_INTERVAL_MS = 5000;
+
+
+function readCartridgeId(bytes: Uint8Array): string {
+  let title = "";
+  for (let i = 0x134; i <= 0x143 && i < bytes.length; i++) {
+    const byte = bytes[i];
+    if (byte < 0x20 || byte > 0x7e) break; // stop at the null/padding byte
+    title += String.fromCharCode(byte);
+  }
+  title = title.trim() || "untitled";
+
+  const checksum =
+    bytes.length > 0x14f ? (bytes[0x14e] << 8) | bytes[0x14f] : 0;
+
+  return `${title}-${checksum.toString(16).padStart(4, "0")}`;
+}
+
+function bytesToBase64(bytes: Uint8Array): string {
+  let binary = "";
+  const chunkSize = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize));
+  }
+  return btoa(binary);
+}
+
+function base64ToBytes(base64: string): Uint8Array {
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return bytes;
+}
+
 type Palette = readonly [number, number, number][];
 
 // Shade index (0 = lightest) -> RGB, as produced by Ppu::framebuffer().
@@ -302,6 +339,7 @@ export function EmulatorScreen() {
   const moduleRef = useRef<EmulatorModule | null>(null);
   const emulatorRef = useRef<EmulatorInstance | null>(null);
   const imageDataRef = useRef<ImageData | null>(null);
+  const saveKeyRef = useRef<string | null>(null);
   const [status, setStatus] = useState<LoadStatus>("loading");
   const [romLoaded, setRomLoaded] = useState(false);
   const [paletteKey, setPaletteKey] = useState<keyof typeof PALETTES>(DEFAULT_PALETTE);
@@ -433,11 +471,57 @@ export function EmulatorScreen() {
     };
   }, []);
 
+  const saveCartRam = useCallback(() => {
+    const emulator = emulatorRef.current;
+    const key = saveKeyRef.current;
+    if (!emulator || !key) return;
+    const ram = emulator.getCartRam();
+    if (ram.length === 0) return; // nothing battery-backed to persist
+    try {
+      localStorage.setItem(key, bytesToBase64(ram));
+    } catch {
+      // Storage full/unavailable (e.g. private browsing) - not fatal.
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!romLoaded) return;
+    const interval = setInterval(saveCartRam, AUTOSAVE_INTERVAL_MS);
+    return () => clearInterval(interval);
+  }, [romLoaded, saveCartRam]);
+
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "hidden") saveCartRam();
+    };
+    window.addEventListener("beforeunload", saveCartRam);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      window.removeEventListener("beforeunload", saveCartRam);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [saveCartRam]);
+
   const loadRomBytes = (bytes: Uint8Array) => {
     const emulator = emulatorRef.current;
     if (!emulator) return;
+
+    saveCartRam(); // flush whatever ROM was previously running
+
     emulator.reset();
     emulator.loadRom(bytes);
+
+    const key = SAVE_KEY_PREFIX + readCartridgeId(bytes);
+    saveKeyRef.current = key;
+    const saved = localStorage.getItem(key);
+    if (saved) {
+      try {
+        emulator.loadCartRam(base64ToBytes(saved));
+      } catch {
+        // Corrupted/incompatible save data - start fresh instead of crashing.
+      }
+    }
+
     setRomLoaded(true);
   };
 
