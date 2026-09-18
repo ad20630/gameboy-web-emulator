@@ -555,12 +555,12 @@ export function EmulatorScreen() {
         className="w-full border border-neutral-700 bg-black"
         style={{ imageRendering: "pixelated", aspectRatio: `${SCREEN_WIDTH} / ${SCREEN_HEIGHT}` }}
       />
-      <div className="flex items-center gap-3">
+      <div className="flex w-full min-w-0 flex-wrap items-center gap-3">
         <select
           value={selectedTestRom}
           disabled={status !== "ready"}
           onChange={(event) => setSelectedTestRom(event.target.value)}
-          className="rounded border border-neutral-700 bg-neutral-900 px-2 py-1 text-sm text-neutral-300"
+          className="min-w-0 flex-1 truncate rounded border border-neutral-700 bg-neutral-900 px-2 py-1 text-sm text-neutral-300"
         >
           <option value="" disabled>
             Select test ROM...
@@ -575,25 +575,25 @@ export function EmulatorScreen() {
           type="button"
           onClick={handleLoadTestRom}
           disabled={status !== "ready" || !selectedTestRom}
-          className="rounded border border-neutral-700 bg-neutral-900 px-3 py-1 text-sm text-neutral-300 disabled:opacity-50"
+          className="shrink-0 rounded border border-neutral-700 bg-neutral-900 px-3 py-1 text-sm text-neutral-300 disabled:opacity-50"
         >
           Load
         </button>
       </div>
-      <div className="flex items-center gap-3">
+      <div className="flex w-full min-w-0 flex-wrap items-center gap-3">
         <input
           type="file"
           accept=".gb,.gbc"
           disabled={status !== "ready"}
           onChange={handleFileChange}
-          className="text-sm text-neutral-300"
+          className="min-w-0 flex-1 overflow-hidden text-sm text-neutral-300"
         />
         <select
           value={paletteKey}
           onChange={(event) =>
             setPaletteKey(event.target.value as keyof typeof PALETTES)
           }
-          className="rounded border border-neutral-700 bg-neutral-900 px-2 py-1 text-sm text-neutral-300"
+          className="min-w-0 shrink-0 truncate rounded border border-neutral-700 bg-neutral-900 px-2 py-1 text-sm text-neutral-300"
         >
           {(["hardware", "boot", "custom"] as const).map((group) => (
             <optgroup key={group} label={PALETTE_GROUP_LABELS[group]}>
