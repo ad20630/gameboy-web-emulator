@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { loadEmulatorModule } from "@/lib/wasm/loadEmulator";
+import { TouchControls } from "@/components/TouchControls";
 import type { EmulatorInstance, EmulatorModule } from "@/lib/wasm/types";
 
 type LoadStatus = "loading" | "ready" | "error";
@@ -447,17 +448,23 @@ export function EmulatorScreen() {
     drawFrame();
   }, [drawFrame]);
 
+  const setButton = useCallback(
+    (buttonName: keyof EmulatorModule["Button"], pressed: boolean) => {
+      const emulatorModule = moduleRef.current;
+      const emulator = emulatorRef.current;
+      if (!emulatorModule || !emulator) return;
+      emulator.setButtonPressed(emulatorModule.Button[buttonName], pressed);
+    },
+    []
+  );
+
   useEffect(() => {
     const handleKey = (pressed: boolean) => (event: KeyboardEvent) => {
-      const module = moduleRef.current;
-      const emulator = emulatorRef.current;
-      if (!module || !emulator) return;
-
       const buttonName = KEY_TO_BUTTON[event.key];
       if (!buttonName) return;
 
       event.preventDefault();
-      emulator.setButtonPressed(module.Button[buttonName], pressed);
+      setButton(buttonName, pressed);
     };
 
     const onKeyDown = handleKey(true);
@@ -469,7 +476,7 @@ export function EmulatorScreen() {
       window.removeEventListener("keydown", onKeyDown);
       window.removeEventListener("keyup", onKeyUp);
     };
-  }, []);
+  }, [setButton]);
 
   const saveCartRam = useCallback(() => {
     const emulator = emulatorRef.current;
@@ -540,13 +547,13 @@ export function EmulatorScreen() {
   };
 
   return (
-    <div className="flex flex-col items-center gap-3">
+    <div className="flex w-full max-w-[480px] flex-col items-center gap-3">
       <canvas
         ref={canvasRef}
         width={SCREEN_WIDTH}
         height={SCREEN_HEIGHT}
-        className="border border-neutral-700 bg-black"
-        style={{ imageRendering: "pixelated", width: 480, height: 432 }}
+        className="w-full border border-neutral-700 bg-black"
+        style={{ imageRendering: "pixelated", aspectRatio: `${SCREEN_WIDTH} / ${SCREEN_HEIGHT}` }}
       />
       <div className="flex items-center gap-3">
         <select
@@ -605,6 +612,7 @@ export function EmulatorScreen() {
         Status: {status}
         {romLoaded ? " · running" : ""}
       </p>
+      <TouchControls disabled={!romLoaded} onButtonChange={setButton} />
     </div>
   );
 }
