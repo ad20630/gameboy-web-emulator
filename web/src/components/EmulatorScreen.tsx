@@ -21,6 +21,13 @@ type Speed = (typeof SPEED_OPTIONS)[number];
 const SAVE_KEY_PREFIX = "gb-save-";
 const AUTOSAVE_INTERVAL_MS = 5000;
 
+const SAVE_STATE_KEY_PREFIX = "gb-savestate-";
+const SAVE_STATE_SLOT_COUNT = 10;
+
+function saveStateKey(cartridgeId: string, slot: number): string {
+  return `${SAVE_STATE_KEY_PREFIX}${cartridgeId}-${slot}`;
+}
+
 
 function readCartridgeId(bytes: Uint8Array): string {
   let title = "";
@@ -341,16 +348,22 @@ const KEY_TO_BUTTON: Record<string, keyof EmulatorModule["Button"]> = {
 
 export function EmulatorScreen() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const moduleRef = useRef<EmulatorModule | null>(null);
   const emulatorRef = useRef<EmulatorInstance | null>(null);
   const imageDataRef = useRef<ImageData | null>(null);
   const saveKeyRef = useRef<string | null>(null);
+  const cartridgeIdRef = useRef<string | null>(null);
   const [status, setStatus] = useState<LoadStatus>("loading");
   const [romLoaded, setRomLoaded] = useState(false);
   const [paletteKey, setPaletteKey] = useState<keyof typeof PALETTES>(DEFAULT_PALETTE);
   const [selectedTestRom, setSelectedTestRom] = useState("");
   const [paused, setPaused] = useState(false);
   const [speed, setSpeed] = useState<Speed>(1);
+  const [selectedSlot, setSelectedSlot] = useState(0);
+  const [filledSlots, setFilledSlots] = useState<boolean[]>(() =>
+    Array(SAVE_STATE_SLOT_COUNT).fill(false)
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -520,6 +533,18 @@ export function EmulatorScreen() {
     };
   }, [saveCartRam]);
 
+  const refreshFilledSlots = useCallback((cartridgeId: string | null) => {
+    if (!cartridgeId) {
+      setFilledSlots(Array(SAVE_STATE_SLOT_COUNT).fill(false));
+      return;
+    }
+    const next: boolean[] = [];
+    for (let slot = 0; slot < SAVE_STATE_SLOT_COUNT; slot++) {
+      next.push(localStorage.getItem(saveStateKey(cartridgeId, slot)) !== null);
+    }
+    setFilledSlots(next);
+  }, []);
+
   const loadRomBytes = (bytes: Uint8Array) => {
     const emulator = emulatorRef.current;
     if (!emulator) return;
@@ -529,9 +554,10 @@ export function EmulatorScreen() {
     emulator.reset();
     emulator.loadRom(bytes);
 
-    const key = SAVE_KEY_PREFIX + readCartridgeId(bytes);
-    saveKeyRef.current = key;
-    const saved = localStorage.getItem(key);
+    const cartridgeId = readCartridgeId(bytes);
+    cartridgeIdRef.current = cartridgeId;
+    saveKeyRef.current = SAVE_KEY_PREFIX + cartridgeId;
+    const saved = localStorage.getItem(saveKeyRef.current);
     if (saved) {
       try {
         emulator.loadCartRam(base64ToBytes(saved));
@@ -539,10 +565,40 @@ export function EmulatorScreen() {
         // Corrupted/incompatible save data - start fresh instead of crashing.
       }
     }
+    refreshFilledSlots(cartridgeId);
 
     setPaused(false);
     setRomLoaded(true);
   };
+
+  const handleSaveState = useCallback(() => {
+    const emulator = emulatorRef.current;
+    const cartridgeId = cartridgeIdRef.current;
+    if (!emulator || !cartridgeId) return;
+    try {
+      localStorage.setItem(
+        saveStateKey(cartridgeId, selectedSlot),
+        bytesToBase64(emulator.getSaveState())
+      );
+      refreshFilledSlots(cartridgeId);
+    } catch {
+      // Storage full/unavailable (e.g. private browsing) - not fatal.
+    }
+  }, [selectedSlot, refreshFilledSlots]);
+
+  const handleLoadState = useCallback(() => {
+    const emulator = emulatorRef.current;
+    const cartridgeId = cartridgeIdRef.current;
+    if (!emulator || !cartridgeId) return;
+    const saved = localStorage.getItem(saveStateKey(cartridgeId, selectedSlot));
+    if (!saved) return;
+    try {
+      emulator.loadSaveState(base64ToBytes(saved));
+      drawFrame(); // repaint immediately, even while paused
+    } catch {
+      // Corrupted save data - ignore rather than crash.
+    }
+  }, [selectedSlot, drawFrame]);
 
   const handleFileChange = async (
     event: React.ChangeEvent<HTMLInputElement>
@@ -556,6 +612,9 @@ export function EmulatorScreen() {
     if (!selectedTestRom) return;
     const response = await fetch(selectedTestRom);
     loadRomBytes(new Uint8Array(await response.arrayBuffer()));
+    // Clear any locally-picked file so the input doesn't keep showing its
+    // name once a test ROM has taken over.
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   return (
@@ -572,6 +631,7 @@ export function EmulatorScreen() {
           value={selectedTestRom}
           disabled={status !== "ready"}
           onChange={(event) => setSelectedTestRom(event.target.value)}
+          autoComplete="off"
           className="min-w-0 flex-1 truncate rounded border border-neutral-700 bg-neutral-900 px-2 py-1 text-sm text-neutral-300"
         >
           <option value="" disabled>
@@ -594,10 +654,12 @@ export function EmulatorScreen() {
       </div>
       <div className="flex w-full min-w-0 flex-wrap items-center gap-3">
         <input
+          ref={fileInputRef}
           type="file"
           accept=".gb,.gbc"
           disabled={status !== "ready"}
           onChange={handleFileChange}
+          autoComplete="off"
           className="min-w-0 flex-1 overflow-hidden text-sm text-neutral-300"
         />
         <select
@@ -620,7 +682,7 @@ export function EmulatorScreen() {
           ))}
         </select>
       </div>
-      <div className="flex w-full min-w-0 flex-wrap items-center gap-3">
+      <div className="flex w-full min-w-0 flex-wrap items-center justify-center gap-2">
         <button
           type="button"
           onClick={() => setPaused((prev) => !prev)}
@@ -629,7 +691,7 @@ export function EmulatorScreen() {
         >
           {paused ? "Resume" : "Pause"}
         </button>
-        <div className="flex shrink-0 gap-1" role="group" aria-label="Emulation speed">
+        <div className="mr-auto flex shrink-0 gap-1" role="group" aria-label="Emulation speed">
           {SPEED_OPTIONS.map((option) => (
             <button
               key={option}
@@ -646,6 +708,39 @@ export function EmulatorScreen() {
               {option}x
             </button>
           ))}
+        </div>
+        <div className="flex min-w-0 shrink-0 flex-wrap items-center justify-center gap-2">
+          <select
+            value={selectedSlot}
+            onChange={(event) => setSelectedSlot(Number(event.target.value))}
+            disabled={!romLoaded}
+            aria-label="Save state slot"
+            className="min-w-0 shrink-0 rounded border border-neutral-700 bg-neutral-900 px-2 py-1 text-sm text-neutral-300 disabled:opacity-50"
+          >
+            {Array.from({ length: SAVE_STATE_SLOT_COUNT }, (_, slot) => (
+              <option key={slot} value={slot}>
+                Slot {slot + 1}
+              </option>
+            ))}
+          </select>
+          <button
+            type="button"
+            onClick={handleSaveState}
+            disabled={!romLoaded}
+            title="Save state"
+            className="shrink-0 rounded border border-neutral-700 bg-neutral-900 px-3 py-1 text-sm text-neutral-300 disabled:opacity-50"
+          >
+            Save
+          </button>
+          <button
+            type="button"
+            onClick={handleLoadState}
+            disabled={!romLoaded || !filledSlots[selectedSlot]}
+            title="Load state"
+            className="shrink-0 rounded border border-neutral-700 bg-neutral-900 px-3 py-1 text-sm text-neutral-300 disabled:opacity-50"
+          >
+            Load
+          </button>
         </div>
       </div>
       <p className="text-sm text-neutral-400">

@@ -21,6 +21,13 @@ export interface EmulatorInstance {
   // Zero-length for carts with no cartridge RAM.
   getCartRam(): Uint8Array;
   loadCartRam(data: Uint8Array): void;
+  // Full machine snapshot (CPU/PPU/MMU/timer/joypad/cartridge). The
+  // returned view aliases wasm memory - copy it before calling into the
+  // emulator again.
+  getSaveState(): Uint8Array;
+  // Returns false if `data` is malformed/truncated or from an incompatible
+  // save-state version.
+  loadSaveState(data: Uint8Array): boolean;
   setButtonPressed(button: EmulatorButtonValue, pressed: boolean): void;
 }
 

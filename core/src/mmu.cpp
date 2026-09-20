@@ -23,6 +23,20 @@ void Mmu::requestInterrupt(uint8_t mask) {
     io_[kIfAddress - 0xFF00] |= mask;
 }
 
+void Mmu::saveState(StateWriter& writer) const {
+    writer.writeBytes(wram_.data(), wram_.size());
+    writer.writeBytes(hram_.data(), hram_.size());
+    writer.writeBytes(io_.data(), io_.size());
+    writer.writeU8(ie_);
+}
+
+void Mmu::loadState(StateReader& reader) {
+    reader.readBytes(wram_.data(), wram_.size());
+    reader.readBytes(hram_.data(), hram_.size());
+    reader.readBytes(io_.data(), io_.size());
+    ie_ = reader.readU8();
+}
+
 uint8_t Mmu::read8(uint16_t address) const {
     if (address < 0x8000) {
         return cartridge_.read8(address);

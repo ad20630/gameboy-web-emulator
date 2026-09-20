@@ -19,6 +19,20 @@ void Timer::reset() {
     tac_ = 0;
 }
 
+void Timer::saveState(StateWriter& writer) const {
+    writer.writeU16(systemCounter_);
+    writer.writeU8(tima_);
+    writer.writeU8(tma_);
+    writer.writeU8(tac_);
+}
+
+void Timer::loadState(StateReader& reader) {
+    systemCounter_ = reader.readU16();
+    tima_ = reader.readU8();
+    tma_ = reader.readU8();
+    tac_ = reader.readU8();
+}
+
 int Timer::timerInputBit() const {
     switch (tac_ & 0x03) {
         case 0: return 9;  // every 1024 T-cycles (4096 Hz)

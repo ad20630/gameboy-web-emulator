@@ -2,6 +2,8 @@
 
 #include <cstdint>
 
+#include "gb/save_state.hpp"
+
 namespace gb {
 
 class Joypad {
@@ -27,6 +29,9 @@ public:
 
     void setButtonPressed(Button button, bool pressed);
     bool consumeInterrupt();
+
+    void saveState(StateWriter& writer) const;
+    void loadState(StateReader& reader);
 
 private:
     uint8_t selectBits_ = 0x30;    // bits 4/5 as last written by the game (active-low select)

@@ -3,6 +3,8 @@
 #include <array>
 #include <cstdint>
 
+#include "gb/save_state.hpp"
+
 namespace gb {
 
 class Cartridge;
@@ -18,6 +20,9 @@ public:
     uint8_t read8(uint16_t address) const;
     void write8(uint16_t address, uint8_t value);
     void requestInterrupt(uint8_t mask);
+
+    void saveState(StateWriter& writer) const;
+    void loadState(StateReader& reader);
 
 private:
     Cartridge& cartridge_;

@@ -2,6 +2,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <vector>
 
 #include "gb/apu.hpp"
 #include "gb/cartridge.hpp"
@@ -9,6 +10,7 @@
 #include "gb/joypad.hpp"
 #include "gb/mmu.hpp"
 #include "gb/ppu.hpp"
+#include "gb/save_state.hpp"
 #include "gb/timer.hpp"
 
 namespace gb {
@@ -27,6 +29,18 @@ public:
 
     void setButtonPressed(Joypad::Button button, bool pressed);
 
+    // Snapshots the full machine state (CPU/PPU/MMU/timer/joypad/cartridge,
+    // including MBC banking and RTC) into saveStateBuffer_ and returns a
+    // reference to it. The reference aliases internal storage and is only
+    // valid until the next call to captureSaveState() or loadState().
+    const std::vector<uint8_t>& captureSaveState();
+
+    // Restores state previously produced by captureSaveState(). Assumes the
+    // same ROM that was saved from has already been loaded via loadRom().
+    // Returns false (leaving the machine in a possibly-mixed state) if the
+    // blob is truncated or doesn't start with the expected header.
+    bool loadState(const uint8_t* data, size_t size);
+
     Cpu& cpu() { return cpu_; }
     Mmu& mmu() { return mmu_; }
     Ppu& ppu() { return ppu_; }
@@ -43,6 +57,8 @@ private:
     Joypad joypad_;
     Mmu mmu_{cartridge_, ppu_, timer_, joypad_};
     Cpu cpu_;
+
+    std::vector<uint8_t> saveStateBuffer_;
 };
 
 } // namespace gb

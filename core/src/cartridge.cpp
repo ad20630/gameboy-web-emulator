@@ -299,4 +299,66 @@ void Cartridge::setRamData(const uint8_t* data, size_t size) {
     std::copy(data, data + count, ram_.begin());
 }
 
+void Cartridge::writeRtcState(StateWriter& writer, const Rtc& rtc) {
+    writer.writeU8(rtc.seconds);
+    writer.writeU8(rtc.minutes);
+    writer.writeU8(rtc.hours);
+    writer.writeU16(rtc.days);
+    writer.writeBool(rtc.halted);
+    writer.writeBool(rtc.dayCarry);
+}
+
+void Cartridge::readRtcState(StateReader& reader, Rtc& rtc) {
+    rtc.seconds = reader.readU8();
+    rtc.minutes = reader.readU8();
+    rtc.hours = reader.readU8();
+    rtc.days = reader.readU16();
+    rtc.halted = reader.readBool();
+    rtc.dayCarry = reader.readBool();
+}
+
+void Cartridge::saveState(StateWriter& writer) const {
+    writer.writeU8(static_cast<uint8_t>(mbcType_));
+    writer.writeBool(hasRtc_);
+    writer.writeBool(ramEnabled_);
+    writer.writeU8(romBankLow_);
+    writer.writeU8(romBankHigh_);
+    writer.writeU8(ramBank_);
+    writer.writeU8(bankingMode_);
+    writer.writeU8(rtcSelect_);
+    writer.writeU8(rtcLatchStage_);
+    writeRtcState(writer, rtcLive_);
+    writeRtcState(writer, rtcLatched_);
+    writer.writeU64(static_cast<uint64_t>(rtcLastSyncMs_));
+
+    writer.writeU32(static_cast<uint32_t>(ram_.size()));
+    writer.writeBytes(ram_.data(), ram_.size());
+}
+
+void Cartridge::loadState(StateReader& reader) {
+    mbcType_ = static_cast<MbcType>(reader.readU8());
+    hasRtc_ = reader.readBool();
+    ramEnabled_ = reader.readBool();
+    romBankLow_ = reader.readU8();
+    romBankHigh_ = reader.readU8();
+    ramBank_ = reader.readU8();
+    bankingMode_ = reader.readU8();
+    rtcSelect_ = reader.readU8();
+    rtcLatchStage_ = reader.readU8();
+    readRtcState(reader, rtcLive_);
+    readRtcState(reader, rtcLatched_);
+    rtcLastSyncMs_ = static_cast<long long>(reader.readU64());
+
+    const uint32_t savedRamSize = reader.readU32();
+    // ram_ is already sized for the currently-loaded ROM; only copy over
+    // what fits so a save from a different/mismatched ROM can't resize it
+    // or overrun.
+    const size_t count = std::min<size_t>(savedRamSize, ram_.size());
+    reader.readBytes(ram_.data(), count);
+    if (savedRamSize > count) {
+        std::vector<uint8_t> discard(savedRamSize - count);
+        reader.readBytes(discard.data(), discard.size());
+    }
+}
+
 } // namespace gb

@@ -5,6 +5,10 @@ namespace gb {
 namespace {
 // 4194304 Hz / ~59.7275 Hz refresh rate.
 constexpr int kCyclesPerFrame = 70224;
+
+// Bumped whenever the save-state layout changes, so old/foreign blobs are
+// rejected up front instead of partially applied.
+constexpr uint8_t kSaveStateVersion = 1;
 } // namespace
 
 Emulator::Emulator() = default;
@@ -44,6 +48,41 @@ void Emulator::runFrame() {
 
 void Emulator::setButtonPressed(Joypad::Button button, bool pressed) {
     joypad_.setButtonPressed(button, pressed);
+}
+
+const std::vector<uint8_t>& Emulator::captureSaveState() {
+    saveStateBuffer_.clear();
+    StateWriter writer(saveStateBuffer_);
+    writer.writeU8('G');
+    writer.writeU8('B');
+    writer.writeU8('S');
+    writer.writeU8('T');
+    writer.writeU8(kSaveStateVersion);
+    cpu_.saveState(writer);
+    timer_.saveState(writer);
+    joypad_.saveState(writer);
+    ppu_.saveState(writer);
+    mmu_.saveState(writer);
+    cartridge_.saveState(writer);
+    return saveStateBuffer_;
+}
+
+bool Emulator::loadState(const uint8_t* data, size_t size) {
+    StateReader reader(data, size);
+    const bool magicOk = reader.readU8() == 'G' && reader.readU8() == 'B' &&
+                          reader.readU8() == 'S' && reader.readU8() == 'T';
+    const uint8_t version = reader.readU8();
+    if (!magicOk || version != kSaveStateVersion || !reader.ok()) {
+        return false;
+    }
+
+    cpu_.loadState(reader);
+    timer_.loadState(reader);
+    joypad_.loadState(reader);
+    ppu_.loadState(reader);
+    mmu_.loadState(reader);
+    cartridge_.loadState(reader);
+    return reader.ok();
 }
 
 } // namespace gb

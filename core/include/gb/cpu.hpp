@@ -2,6 +2,8 @@
 
 #include <cstdint>
 
+#include "gb/save_state.hpp"
+
 namespace gb {
 
 class Mmu;
@@ -15,6 +17,9 @@ public:
 
     // Executes one instruction; returns the number of machine cycles consumed.
     int step(Mmu& mmu);
+
+    void saveState(StateWriter& writer) const;
+    void loadState(StateReader& reader);
 
     static constexpr uint8_t kFlagZero = 0x80;
     static constexpr uint8_t kFlagSubtract = 0x40;

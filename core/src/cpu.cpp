@@ -22,6 +22,38 @@ void Cpu::reset() {
     imeScheduled = false;
 }
 
+void Cpu::saveState(StateWriter& writer) const {
+    writer.writeU8(a);
+    writer.writeU8(f);
+    writer.writeU8(b);
+    writer.writeU8(c);
+    writer.writeU8(d);
+    writer.writeU8(e);
+    writer.writeU8(h);
+    writer.writeU8(l);
+    writer.writeU16(sp);
+    writer.writeU16(pc);
+    writer.writeBool(halted);
+    writer.writeBool(ime);
+    writer.writeBool(imeScheduled);
+}
+
+void Cpu::loadState(StateReader& reader) {
+    a = reader.readU8();
+    f = reader.readU8();
+    b = reader.readU8();
+    c = reader.readU8();
+    d = reader.readU8();
+    e = reader.readU8();
+    h = reader.readU8();
+    l = reader.readU8();
+    sp = reader.readU16();
+    pc = reader.readU16();
+    halted = reader.readBool();
+    ime = reader.readBool();
+    imeScheduled = reader.readBool();
+}
+
 uint8_t Cpu::fetch8(Mmu& mmu) {
     return mmu.read8(pc++);
 }

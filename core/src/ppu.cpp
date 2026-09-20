@@ -39,6 +39,28 @@ void Ppu::reset() {
     setLycFlag(ly() == lyc());
 }
 
+void Ppu::saveState(StateWriter& writer) const {
+    writer.writeBytes(vram_.data(), vram_.size());
+    writer.writeBytes(oam_.data(), oam_.size());
+    writer.writeBytes(registers_.data(), registers_.size());
+    writer.writeBytes(framebuffer_.data(), framebuffer_.size());
+    writer.writeU32(static_cast<uint32_t>(lineDots_));
+    writer.writeU32(static_cast<uint32_t>(drawingDots_));
+    writer.writeBool(statLine_);
+    writer.writeU8(windowLine_);
+}
+
+void Ppu::loadState(StateReader& reader) {
+    reader.readBytes(vram_.data(), vram_.size());
+    reader.readBytes(oam_.data(), oam_.size());
+    reader.readBytes(registers_.data(), registers_.size());
+    reader.readBytes(framebuffer_.data(), framebuffer_.size());
+    lineDots_ = static_cast<int>(reader.readU32());
+    drawingDots_ = static_cast<int>(reader.readU32());
+    statLine_ = reader.readBool();
+    windowLine_ = reader.readU8();
+}
+
 uint8_t Ppu::tick(int tCycles) {
     if (!lcdEnabled()) {
         lineDots_ = 0;

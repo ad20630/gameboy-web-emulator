@@ -3,6 +3,8 @@
 #include <array>
 #include <cstdint>
 
+#include "gb/save_state.hpp"
+
 namespace gb {
 
 class Ppu {
@@ -22,6 +24,9 @@ public:
 
     uint8_t readRegister(uint16_t address) const;  // 0xFF40-0xFF4B
     void writeRegister(uint16_t address, uint8_t value);
+
+    void saveState(StateWriter& writer) const;
+    void loadState(StateReader& reader);
 
     // 160x144 pixels, row-major, one byte per pixel holding a final shade
     // index (0-3, 0 = lightest). Callers apply their own 4-color palette to

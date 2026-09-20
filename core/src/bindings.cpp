@@ -50,6 +50,26 @@ void loadCartRam(gb::Emulator& emulator, const val& data) {
     emulator.cartridge().setRamData(bytes.data(), bytes.size());
 }
 
+// Snapshots the full machine state. Like getFramebuffer()/getCartRam(), the
+// returned view aliases wasm memory owned by the emulator; callers should
+// copy it out (e.g. `new Uint8Array(view)`) before calling into the
+// emulator again.
+val getSaveState(gb::Emulator& emulator) {
+    const std::vector<uint8_t>& state = emulator.captureSaveState();
+    return val(typed_memory_view(state.size(), state.data()));
+}
+
+// Restores a snapshot produced by getSaveState(); call after loadRom() has
+// loaded the same ROM the snapshot was taken from. Returns false if the
+// blob is malformed/truncated.
+bool loadSaveState(gb::Emulator& emulator, const val& data) {
+    const size_t length = data["length"].as<size_t>();
+    std::vector<uint8_t> bytes(length);
+    val memoryView{typed_memory_view(length, bytes.data())};
+    memoryView.call<void>("set", data);
+    return emulator.loadState(bytes.data(), bytes.size());
+}
+
 } // namespace
 
 EMSCRIPTEN_BINDINGS(gb_core) {
@@ -71,5 +91,7 @@ EMSCRIPTEN_BINDINGS(gb_core) {
         .function("getFramebuffer", &getFramebuffer)
         .function("getCartRam", &getCartRam)
         .function("loadCartRam", &loadCartRam)
+        .function("getSaveState", &getSaveState)
+        .function("loadSaveState", &loadSaveState)
         .function("setButtonPressed", &gb::Emulator::setButtonPressed);
 }

@@ -4,6 +4,8 @@
 #include <cstdint>
 #include <vector>
 
+#include "gb/save_state.hpp"
+
 namespace gb {
 
 class Cartridge {
@@ -24,6 +26,14 @@ public:
     const uint8_t* ramData() const { return ram_.data(); }
     size_t ramSize() const { return ram_.size(); }
     void setRamData(const uint8_t* data, size_t size);
+
+    // Unlike ramData()/setRamData(), this snapshot includes MBC banking
+    // state and the RTC (both live and latched), so a save state resumes
+    // mid-game rather than just at power-on with the right cart RAM. The ROM
+    // image itself is never included; loadState() assumes the same ROM that
+    // was saved from is already loaded via load().
+    void saveState(StateWriter& writer) const;
+    void loadState(StateReader& reader);
 
 private:
     enum class MbcType : uint8_t { None, Mbc1, Mbc2, Mbc3, Mbc5 };
@@ -71,6 +81,9 @@ private:
     uint8_t readRtcRegister(uint8_t reg) const;
     void writeRtcRegister(uint8_t reg, uint8_t value);
     void latchRtc();
+
+    static void writeRtcState(StateWriter& writer, const Rtc& rtc);
+    static void readRtcState(StateReader& reader, Rtc& rtc);
 };
 
 } // namespace gb

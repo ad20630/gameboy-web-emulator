@@ -13,6 +13,22 @@ void Joypad::reset() {
     interruptPending_ = false;
 }
 
+void Joypad::saveState(StateWriter& writer) const {
+    writer.writeU8(selectBits_);
+    writer.writeU8(directionState_);
+    writer.writeU8(actionState_);
+    writer.writeU8(lastOutputLow_);
+    writer.writeBool(interruptPending_);
+}
+
+void Joypad::loadState(StateReader& reader) {
+    selectBits_ = reader.readU8();
+    directionState_ = reader.readU8();
+    actionState_ = reader.readU8();
+    lastOutputLow_ = reader.readU8();
+    interruptPending_ = reader.readBool();
+}
+
 uint8_t Joypad::outputLowNibble() const {
     uint8_t nibble = 0x0F;
     if ((selectBits_ & 0x10) == 0) nibble &= directionState_;
