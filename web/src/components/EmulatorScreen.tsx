@@ -322,6 +322,7 @@ const PALETTE_GROUP_LABELS: Record<PaletteGroup, string> = {
 // Bundled ROMs served from web/public/roms, selectable without a file picker.
 const TEST_ROMS: Record<string, string> = {
   "cpu_instrs.gb": "/roms/cpu_instrs.gb",
+  "dmg-acid2.gb": "/roms/dmg-acid2.gb",
 };
 
 const KEY_TO_BUTTON: Record<string, keyof EmulatorModule["Button"]> = {
