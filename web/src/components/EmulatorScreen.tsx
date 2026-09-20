@@ -15,6 +15,9 @@ const SCREEN_HEIGHT = 144;
 const GB_FRAME_MS = (70224 / 4194304) * 1000;
 const MAX_FRAMES_PER_RAF = 4;
 
+const SPEED_OPTIONS = [1, 2, 4] as const;
+type Speed = (typeof SPEED_OPTIONS)[number];
+
 const SAVE_KEY_PREFIX = "gb-save-";
 const AUTOSAVE_INTERVAL_MS = 5000;
 
@@ -346,6 +349,8 @@ export function EmulatorScreen() {
   const [romLoaded, setRomLoaded] = useState(false);
   const [paletteKey, setPaletteKey] = useState<keyof typeof PALETTES>(DEFAULT_PALETTE);
   const [selectedTestRom, setSelectedTestRom] = useState("");
+  const [paused, setPaused] = useState(false);
+  const [speed, setSpeed] = useState<Speed>(1);
 
   useEffect(() => {
     let cancelled = false;
@@ -395,12 +400,15 @@ export function EmulatorScreen() {
   }, [paletteKey]);
 
   useEffect(() => {
-    if (!romLoaded) return;
+    // Paused: cancel the loop outright (rather than running it in place)
+    // so the frozen frame stays on screen and no CPU/battery is spent.
+    if (!romLoaded || paused) return;
 
     let running = true;
     let frameId: number;
     let lastTimestamp: number | null = null;
     let accumulatedMs = 0;
+    const maxFramesPerRaf = MAX_FRAMES_PER_RAF * speed;
 
     const loop = (timestamp: number) => {
       if (!running) return;
@@ -415,12 +423,14 @@ export function EmulatorScreen() {
       if (deltaMs > 1000) {
         deltaMs = GB_FRAME_MS;
       }
-      accumulatedMs += deltaMs;
+      // Fast-forward by feeding the loop sped-up wall-clock time, rather
+      // than running extra frames per emulated frame's worth of time.
+      accumulatedMs += deltaMs * speed;
 
       let framesRun = 0;
       while (
         accumulatedMs >= GB_FRAME_MS &&
-        framesRun < MAX_FRAMES_PER_RAF
+        framesRun < maxFramesPerRaf
       ) {
         emulatorRef.current?.runFrame();
         accumulatedMs -= GB_FRAME_MS;
@@ -428,7 +438,7 @@ export function EmulatorScreen() {
       }
       // Dropped time from an oversaturated frame budget shouldn't linger and
       // cause a burst of catch-up frames later.
-      if (framesRun === MAX_FRAMES_PER_RAF) {
+      if (framesRun === maxFramesPerRaf) {
         accumulatedMs = 0;
       }
 
@@ -441,7 +451,7 @@ export function EmulatorScreen() {
       running = false;
       cancelAnimationFrame(frameId);
     };
-  }, [romLoaded, drawFrame]);
+  }, [romLoaded, paused, speed, drawFrame]);
 
   // Repaint the current frame immediately when the palette changes, even if
   // the emulator isn't running (e.g. before a ROM is loaded).
@@ -530,6 +540,7 @@ export function EmulatorScreen() {
       }
     }
 
+    setPaused(false);
     setRomLoaded(true);
   };
 
@@ -609,9 +620,37 @@ export function EmulatorScreen() {
           ))}
         </select>
       </div>
+      <div className="flex w-full min-w-0 flex-wrap items-center gap-3">
+        <button
+          type="button"
+          onClick={() => setPaused((prev) => !prev)}
+          disabled={!romLoaded}
+          className="w-20 shrink-0 rounded border border-neutral-700 bg-neutral-900 px-3 py-1 text-center text-sm text-neutral-300 disabled:opacity-50"
+        >
+          {paused ? "Resume" : "Pause"}
+        </button>
+        <div className="flex shrink-0 gap-1" role="group" aria-label="Emulation speed">
+          {SPEED_OPTIONS.map((option) => (
+            <button
+              key={option}
+              type="button"
+              onClick={() => setSpeed(option)}
+              disabled={!romLoaded}
+              aria-pressed={speed === option}
+              className={`rounded border px-2 py-1 text-sm disabled:opacity-50 ${
+                speed === option
+                  ? "border-neutral-400 bg-neutral-700 text-neutral-100"
+                  : "border-neutral-700 bg-neutral-900 text-neutral-300"
+              }`}
+            >
+              {option}x
+            </button>
+          ))}
+        </div>
+      </div>
       <p className="text-sm text-neutral-400">
         Status: {status}
-        {romLoaded ? " · running" : ""}
+        {romLoaded ? (paused ? " · paused" : ` · running${speed !== 1 ? ` (${speed}x)` : ""}`) : ""}
       </p>
       <TouchControls disabled={!romLoaded} onButtonChange={setButton} />
     </div>
