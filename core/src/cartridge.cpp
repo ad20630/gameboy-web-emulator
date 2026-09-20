@@ -80,7 +80,7 @@ void Cartridge::load(const uint8_t* data, size_t size) {
 uint32_t Cartridge::romBank(uint16_t address) const {
     switch (mbcType_) {
     case MbcType::None:
-        return 1;
+        return address < 0x4000 ? 0 : 1;
     case MbcType::Mbc1:
         if (address < 0x4000) {
             // In RAM-banking mode the upper bits also steer the 0x0000-0x3FFF
