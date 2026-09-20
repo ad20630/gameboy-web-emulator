@@ -35,6 +35,7 @@ private:
     std::array<uint8_t, kScreenWidth * kScreenHeight> framebuffer_{};
 
     int lineDots_ = 0;
+    int drawingDots_ = 172; // Mode 3 length for the current line; recomputed at each line start
     bool statLine_ = false;
     uint8_t windowLine_ = 0; // internal line counter for the window, only advances on lines it's drawn
 
@@ -65,6 +66,7 @@ private:
     }
 
     uint8_t updateStatAndCheckInterrupt();
+    int computeDrawingDots(uint8_t line) const;
 
     void renderScanline(uint8_t line);
     void renderBackgroundAndWindow(uint8_t line, std::array<uint8_t, kScreenWidth>& bgColorIndex);

@@ -9,10 +9,12 @@ constexpr int kDotsPerLine = 456;
 constexpr int kLinesPerFrame = 154;
 constexpr uint8_t kVBlankStartLine = 144;
 
-// Mode 3 (Drawing) length is fixed here at its minimum; real hardware
-// stretches it based on sprites/scroll, which this PPU doesn't model yet.
 constexpr int kOamScanDots = 80;
-constexpr int kDrawingDots = 172;
+// Mode 3 (Drawing)'s minimum length; real hardware stretches it based on
+// SCX's fine scroll and how many sprites are on the line (see
+// Ppu::computeDrawingDots), up to a documented max of 289 dots (10 sprites
+// each adding up to 11, plus up to 7 for SCX % 8).
+constexpr int kDrawingDotsMin = 172;
 
 constexpr uint8_t kModeHBlank = 0;
 constexpr uint8_t kModeVBlank = 1;
@@ -32,6 +34,7 @@ void Ppu::reset() {
     statLine_ = false;
     windowLine_ = 0;
     setLy(0);
+    drawingDots_ = computeDrawingDots(0);
     setMode(kModeOamScan);
     setLycFlag(ly() == lyc());
 }
@@ -55,6 +58,9 @@ uint8_t Ppu::tick(int tCycles) {
             if (nextLy == 0) {
                 windowLine_ = 0; // internal window line counter resets each frame
             }
+            if (nextLy < kVBlankStartLine) {
+                drawingDots_ = computeDrawingDots(nextLy);
+            }
             if (nextLy == kVBlankStartLine) {
                 interrupts |= kVBlankInterruptBit;
             }
@@ -66,7 +72,7 @@ uint8_t Ppu::tick(int tCycles) {
             currentMode = kModeVBlank;
         } else if (lineDots_ < kOamScanDots) {
             currentMode = kModeOamScan;
-        } else if (lineDots_ < kOamScanDots + kDrawingDots) {
+        } else if (lineDots_ < kOamScanDots + drawingDots_) {
             currentMode = kModeDrawing;
         } else {
             currentMode = kModeHBlank;
@@ -81,6 +87,27 @@ uint8_t Ppu::tick(int tCycles) {
         interrupts |= updateStatAndCheckInterrupt();
     }
     return interrupts;
+}
+
+int Ppu::computeDrawingDots(uint8_t line) const {
+    int dots = kDrawingDotsMin + (scx() % 8);
+
+    if (!spritesEnabled()) {
+        return dots;
+    }
+
+    const int height = tallSprites() ? 16 : 8;
+    int count = 0;
+    for (int i = 0; i < 40 && count < 10; ++i) {
+        const int spriteY = static_cast<int>(oam_[i * 4 + 0]) - 16;
+        if (static_cast<int>(line) < spriteY || static_cast<int>(line) >= spriteY + height) {
+            continue;
+        }
+        const int spriteX = static_cast<int>(oam_[i * 4 + 1]);
+        dots += 11 - std::min(5, (spriteX + static_cast<int>(scx())) % 8);
+        ++count;
+    }
+    return dots;
 }
 
 uint8_t Ppu::updateStatAndCheckInterrupt() {
