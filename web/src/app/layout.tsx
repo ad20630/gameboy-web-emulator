@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Game Boy Web Emulator",
+  title: "Web DMG",
   description: "A Game Boy emulator written in C++, running in the browser via WebAssembly.",
 };
 
