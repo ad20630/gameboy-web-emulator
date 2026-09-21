@@ -8,7 +8,7 @@ constexpr int kCyclesPerFrame = 70224;
 
 // Bumped whenever the save-state layout changes, so old/foreign blobs are
 // rejected up front instead of partially applied.
-constexpr uint8_t kSaveStateVersion = 1;
+constexpr uint8_t kSaveStateVersion = 2;
 } // namespace
 
 Emulator::Emulator() = default;
@@ -18,6 +18,7 @@ void Emulator::reset() {
     cpu_.reset();
     timer_.reset();
     ppu_.reset();
+    apu_.reset();
     joypad_.reset();
 }
 
@@ -33,6 +34,7 @@ int Emulator::step() {
     if (const uint8_t ppuInterrupts = ppu_.tick(cycles)) {
         mmu_.requestInterrupt(ppuInterrupts);
     }
+    apu_.tick(cycles);
     if (joypad_.consumeInterrupt()) {
         mmu_.requestInterrupt(Cpu::kInterruptJoypad);
     }
@@ -62,6 +64,7 @@ const std::vector<uint8_t>& Emulator::captureSaveState() {
     timer_.saveState(writer);
     joypad_.saveState(writer);
     ppu_.saveState(writer);
+    apu_.saveState(writer);
     mmu_.saveState(writer);
     cartridge_.saveState(writer);
     return saveStateBuffer_;
@@ -80,6 +83,7 @@ bool Emulator::loadState(const uint8_t* data, size_t size) {
     timer_.loadState(reader);
     joypad_.loadState(reader);
     ppu_.loadState(reader);
+    apu_.loadState(reader);
     mmu_.loadState(reader);
     cartridge_.loadState(reader);
     return reader.ok();

@@ -18,6 +18,16 @@ export interface EmulatorInstance {
   loadRom(data: Uint8Array): void;
   runFrame(): void;
   getFramebuffer(): Uint8Array;
+  // Interleaved stereo float32 (L, R, L, R, ...) generated since the last
+  // call, in [-1, 1] at the rate passed to setAudioSampleRate(). The
+  // returned view aliases wasm memory - copy it before calling into the
+  // emulator again.
+  getAudioSamples(): Float32Array;
+  // Sets the rate audio is generated at; pass the playback device's actual
+  // native rate (e.g. an AudioContext's sampleRate) so it never needs
+  // resampling downstream. Call before the first runFrame() that should
+  // produce audio.
+  setAudioSampleRate(sampleRate: number): void;
   // Zero-length for carts with no cartridge RAM.
   getCartRam(): Uint8Array;
   loadCartRam(data: Uint8Array): void;

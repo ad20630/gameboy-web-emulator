@@ -44,18 +44,19 @@ public:
     Cpu& cpu() { return cpu_; }
     Mmu& mmu() { return mmu_; }
     Ppu& ppu() { return ppu_; }
+    Apu& apu() { return apu_; }
     Joypad& joypad() { return joypad_; }
     Cartridge& cartridge() { return cartridge_; }
 
 private:
-    // Declaration order matters: cartridge_/ppu_/timer_/joypad_ must
+    // Declaration order matters: cartridge_/ppu_/apu_/timer_/joypad_ must
     // construct before mmu_, which holds references to them.
     Cartridge cartridge_;
     Ppu ppu_;
     Apu apu_;
     Timer timer_;
     Joypad joypad_;
-    Mmu mmu_{cartridge_, ppu_, timer_, joypad_};
+    Mmu mmu_{cartridge_, ppu_, apu_, timer_, joypad_};
     Cpu cpu_;
 
     std::vector<uint8_t> saveStateBuffer_;

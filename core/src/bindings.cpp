@@ -5,6 +5,7 @@
 #include <emscripten/bind.h>
 #include <emscripten/val.h>
 
+#include "gb/apu.hpp"
 #include "gb/cartridge.hpp"
 #include "gb/emulator.hpp"
 #include "gb/joypad.hpp"
@@ -32,6 +33,25 @@ val getFramebuffer(gb::Emulator& emulator) {
     return val(typed_memory_view(
         static_cast<size_t>(gb::Ppu::kScreenWidth) * gb::Ppu::kScreenHeight,
         emulator.ppu().framebuffer()));
+}
+
+// Interleaved stereo float32 samples (L, R, L, R, ...) generated since the
+// last call; the view aliases wasm memory and is cleared on the C++ side
+// once this returns, so callers must copy it out before calling into the
+// emulator again (same contract as getFramebuffer()/getSaveState()).
+val getAudioSamples(gb::Emulator& emulator) {
+    gb::Apu& apu = emulator.apu();
+    val view(typed_memory_view(apu.sampleBuffer().size(), apu.sampleBuffer().data()));
+    apu.clearSampleBuffer();
+    return view;
+}
+
+// Callers should pass their playback device's actual native sample rate
+// (e.g. an AudioContext's sampleRate) so audio never needs resampling
+// downstream. Call once before the first runFrame() that should produce
+// audio; safe to call again if the output device changes.
+void setAudioSampleRate(gb::Emulator& emulator, int sampleRate) {
+    emulator.apu().setSampleRate(sampleRate);
 }
 
 // Empty (zero-length) for carts with no cartridge RAM to save.
@@ -89,6 +109,8 @@ EMSCRIPTEN_BINDINGS(gb_core) {
         .function("loadRom", &loadRom)
         .function("runFrame", &gb::Emulator::runFrame)
         .function("getFramebuffer", &getFramebuffer)
+        .function("getAudioSamples", &getAudioSamples)
+        .function("setAudioSampleRate", &setAudioSampleRate)
         .function("getCartRam", &getCartRam)
         .function("loadCartRam", &loadCartRam)
         .function("getSaveState", &getSaveState)

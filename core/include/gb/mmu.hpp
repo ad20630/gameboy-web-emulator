@@ -9,12 +9,13 @@ namespace gb {
 
 class Cartridge;
 class Ppu;
+class Apu;
 class Timer;
 class Joypad;
 
 class Mmu {
 public:
-    Mmu(Cartridge& cartridge, Ppu& ppu, Timer& timer, Joypad& joypad);
+    Mmu(Cartridge& cartridge, Ppu& ppu, Apu& apu, Timer& timer, Joypad& joypad);
     ~Mmu();
 
     uint8_t read8(uint16_t address) const;
@@ -27,14 +28,14 @@ public:
 private:
     Cartridge& cartridge_;
     Ppu& ppu_;
+    Apu& apu_;
     Timer& timer_;
     Joypad& joypad_;
 
     std::array<uint8_t, 0x2000> wram_{};
     std::array<uint8_t, 0x80> hram_{};
-    // Backing store for I/O registers not yet owned by a real subsystem
-    // (serial, sound, IF, ...); behaves as plain read/write memory until
-    // Apu is wired in here directly.
+    // Backing store for I/O registers not owned by a real subsystem
+    // (serial, IF, ...); behaves as plain read/write memory.
     std::array<uint8_t, 0x80> io_{};
     uint8_t ie_ = 0;
 

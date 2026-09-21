@@ -1,5 +1,6 @@
 #include "gb/mmu.hpp"
 
+#include "gb/apu.hpp"
 #include "gb/cartridge.hpp"
 #include "gb/joypad.hpp"
 #include "gb/ppu.hpp"
@@ -13,10 +14,12 @@ constexpr uint16_t kIfAddress = 0xFF0F;
 constexpr uint16_t kDivAddress = 0xFF04;
 constexpr uint16_t kTacAddress = 0xFF07;
 constexpr uint16_t kJoypadAddress = 0xFF00;
+constexpr uint16_t kApuStart = 0xFF10;
+constexpr uint16_t kApuEnd = 0xFF3F; // NR10-NR52 plus wave RAM
 }
 
-Mmu::Mmu(Cartridge& cartridge, Ppu& ppu, Timer& timer, Joypad& joypad)
-    : cartridge_(cartridge), ppu_(ppu), timer_(timer), joypad_(joypad) {}
+Mmu::Mmu(Cartridge& cartridge, Ppu& ppu, Apu& apu, Timer& timer, Joypad& joypad)
+    : cartridge_(cartridge), ppu_(ppu), apu_(apu), timer_(timer), joypad_(joypad) {}
 Mmu::~Mmu() = default;
 
 void Mmu::requestInterrupt(uint8_t mask) {
@@ -99,6 +102,9 @@ uint8_t Mmu::readIo(uint16_t address) const {
     if (address >= kDivAddress && address <= kTacAddress) {
         return timer_.read8(address);
     }
+    if (address >= kApuStart && address <= kApuEnd) {
+        return apu_.read8(address);
+    }
     if (address >= 0xFF40 && address <= 0xFF4B) {
         return ppu_.readRegister(address);
     }
@@ -112,6 +118,10 @@ void Mmu::writeIo(uint16_t address, uint8_t value) {
     }
     if (address >= kDivAddress && address <= kTacAddress) {
         timer_.write8(address, value);
+        return;
+    }
+    if (address >= kApuStart && address <= kApuEnd) {
+        apu_.write8(address, value);
         return;
     }
     if (address == kDmaRegister) {

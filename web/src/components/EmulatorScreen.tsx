@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { loadEmulatorModule } from "@/lib/wasm/loadEmulator";
+import { GbAudioPlayer } from "@/lib/audio/GbAudioPlayer";
 import { TouchControls } from "@/components/TouchControls";
 import type { EmulatorInstance, EmulatorModule } from "@/lib/wasm/types";
 
@@ -352,6 +353,7 @@ export function EmulatorScreen() {
   const moduleRef = useRef<EmulatorModule | null>(null);
   const emulatorRef = useRef<EmulatorInstance | null>(null);
   const imageDataRef = useRef<ImageData | null>(null);
+  const audioPlayerRef = useRef<GbAudioPlayer | null>(null);
   const saveKeyRef = useRef<string | null>(null);
   const cartridgeIdRef = useRef<string | null>(null);
   const [status, setStatus] = useState<LoadStatus>("loading");
@@ -360,6 +362,7 @@ export function EmulatorScreen() {
   const [selectedTestRom, setSelectedTestRom] = useState("");
   const [paused, setPaused] = useState(false);
   const [speed, setSpeed] = useState<Speed>(1);
+  const [muted, setMuted] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState(0);
   const [filledSlots, setFilledSlots] = useState<boolean[]>(() =>
     Array(SAVE_STATE_SLOT_COUNT).fill(false)
@@ -367,12 +370,19 @@ export function EmulatorScreen() {
 
   useEffect(() => {
     let cancelled = false;
+    const audioPlayer = new GbAudioPlayer();
+    audioPlayerRef.current = audioPlayer;
 
-    loadEmulatorModule()
-      .then((module) => {
+    Promise.all([loadEmulatorModule(), audioPlayer.waitUntilReady()])
+      .then(([module]) => {
         if (cancelled) return;
         moduleRef.current = module;
-        emulatorRef.current = new module.Emulator();
+        const emulator = new module.Emulator();
+        // Set before any runFrame() so the core generates audio at the
+        // device's exact native rate - no resampling needed downstream.
+        emulator.setAudioSampleRate(audioPlayer.sampleRate);
+        emulatorRef.current = emulator;
+        audioPlayer.setMuted(muted);
         setStatus("ready");
       })
       .catch(() => {
@@ -382,8 +392,15 @@ export function EmulatorScreen() {
 
     return () => {
       cancelled = true;
+      audioPlayerRef.current?.close();
+      audioPlayerRef.current = null;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    audioPlayerRef.current?.setMuted(muted);
+  }, [muted]);
 
   const drawFrame = useCallback(() => {
     const emulator = emulatorRef.current;
@@ -455,7 +472,15 @@ export function EmulatorScreen() {
         accumulatedMs = 0;
       }
 
-      if (framesRun > 0) drawFrame();
+      if (framesRun > 0) {
+        drawFrame();
+        // Drain every tick regardless of speed/mute so the core's sample
+        // buffer doesn't grow unbounded; GbAudioPlayer drops chunks itself
+        // if they'd push playback too far ahead of real time (e.g. during
+        // fast-forward, which generates audio faster than it plays).
+        const samples = emulatorRef.current?.getAudioSamples();
+        if (samples) audioPlayerRef.current?.push(samples);
+      }
       frameId = requestAnimationFrame(loop);
     };
     frameId = requestAnimationFrame(loop);
@@ -550,6 +575,7 @@ export function EmulatorScreen() {
     if (!emulator) return;
 
     saveCartRam(); // flush whatever ROM was previously running
+    audioPlayerRef.current?.resume(); // called from a user gesture - satisfies autoplay policy
 
     emulator.reset();
     emulator.loadRom(bytes);
@@ -685,11 +711,24 @@ export function EmulatorScreen() {
       <div className="flex w-full min-w-0 flex-wrap items-center justify-center gap-2">
         <button
           type="button"
-          onClick={() => setPaused((prev) => !prev)}
+          onClick={() => {
+            audioPlayerRef.current?.resume();
+            setPaused((prev) => !prev);
+          }}
           disabled={!romLoaded}
           className="w-20 shrink-0 rounded border border-neutral-700 bg-neutral-900 px-3 py-1 text-center text-sm text-neutral-300 disabled:opacity-50"
         >
           {paused ? "Resume" : "Pause"}
+        </button>
+        <button
+          type="button"
+          onClick={() => setMuted((prev) => !prev)}
+          disabled={!romLoaded}
+          aria-pressed={muted}
+          title={muted ? "Unmute" : "Mute"}
+          className="w-16 shrink-0 rounded border border-neutral-700 bg-neutral-900 px-3 py-1 text-center text-sm text-neutral-300 disabled:opacity-50"
+        >
+          {muted ? "Unmute" : "Mute"}
         </button>
         <div className="mr-auto flex shrink-0 gap-1" role="group" aria-label="Emulation speed">
           {SPEED_OPTIONS.map((option) => (
