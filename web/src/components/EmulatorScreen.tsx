@@ -755,8 +755,13 @@ export function EmulatorScreen() {
             setPaused((prev) => !prev);
           }}
           disabled={!romLoaded}
+          aria-pressed={paused}
           title="Pause game"
-          className="w-18 shrink-0 whitespace-nowrap rounded border border-neutral-700 bg-neutral-900 px-2 py-1 text-center text-sm text-neutral-300 disabled:opacity-50"
+          className={`w-18 shrink-0 whitespace-nowrap rounded border px-2 py-1 text-center text-sm disabled:opacity-50 ${
+            paused
+              ? "border-neutral-400 bg-neutral-700 text-neutral-100"
+              : "border-neutral-700 bg-neutral-900 text-neutral-300"
+          }`}
         >
           {paused ? "Resume" : "Pause"}
         </button>
@@ -766,7 +771,11 @@ export function EmulatorScreen() {
           disabled={!romLoaded}
           aria-pressed={muted}
           title={muted ? "Unmute" : "Mute"}
-          className="w-16 shrink-0 whitespace-nowrap rounded border border-neutral-700 bg-neutral-900 px-2 py-1 text-center text-sm text-neutral-300 disabled:opacity-50"
+          className={`w-16 shrink-0 whitespace-nowrap rounded border px-2 py-1 text-center text-sm disabled:opacity-50 ${
+            muted
+              ? "border-neutral-400 bg-neutral-700 text-neutral-100"
+              : "border-neutral-700 bg-neutral-900 text-neutral-300"
+          }`}
         >
           {muted ? "Unmute" : "Mute"}
         </button>
