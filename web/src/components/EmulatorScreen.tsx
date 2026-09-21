@@ -643,6 +643,16 @@ export function EmulatorScreen() {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
+  // Soft-reset, like the console's reset button: reboots CPU/PPU/APU state
+  // but leaves the cartridge (ROM + cart RAM) alone, so the current game
+  // and any unsaved battery RAM survive the reset.
+  const handleReset = useCallback(() => {
+    const emulator = emulatorRef.current;
+    if (!emulator || !romLoaded) return;
+    emulator.reset();
+    drawFrame(); // repaint immediately, even while paused
+  }, [romLoaded, drawFrame]);
+
   return (
     <div className="flex w-full max-w-[480px] flex-col items-center gap-3">
       <canvas
@@ -673,9 +683,19 @@ export function EmulatorScreen() {
           type="button"
           onClick={handleLoadTestRom}
           disabled={status !== "ready" || !selectedTestRom}
+          title="Load test ROM"
           className="shrink-0 rounded border border-neutral-700 bg-neutral-900 px-3 py-1 text-sm text-neutral-300 disabled:opacity-50"
         >
           Load
+        </button>
+        <button
+          type="button"
+          onClick={handleReset}
+          disabled={!romLoaded}
+          title="Reset"
+          className="shrink-0 rounded border border-neutral-700 bg-neutral-900 px-3 py-1 text-sm text-neutral-300 disabled:opacity-50"
+        >
+          Reset
         </button>
       </div>
       <div className="flex w-full min-w-0 flex-wrap items-center gap-3">
@@ -716,6 +736,7 @@ export function EmulatorScreen() {
             setPaused((prev) => !prev);
           }}
           disabled={!romLoaded}
+          title="Pause game"
           className="w-20 shrink-0 rounded border border-neutral-700 bg-neutral-900 px-3 py-1 text-center text-sm text-neutral-300 disabled:opacity-50"
         >
           {paused ? "Resume" : "Pause"}
