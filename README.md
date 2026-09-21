@@ -16,7 +16,7 @@
   <img width="400" height="400" alt="save" src="https://github.com/user-attachments/assets/954e1df8-ed2b-49a3-a9f7-667662f88fa8" />
   
   - Save states, speedup, and pausing.
-  <img width="720" height="720" alt="savestates" src="https://github.com/user-attachments/assets/c97710ab-5235-4159-8c9d-d6dda72ed61b" />
+  <img width="400" height="400" alt="savestates" src="https://github.com/user-attachments/assets/c97710ab-5235-4159-8c9d-d6dda72ed61b" />
 
   - Several palette options.
   <img width="400" height="400" alt="palettes" src="https://github.com/user-attachments/assets/0c523654-b6a7-4223-92b5-2ccbc0157c86" />
