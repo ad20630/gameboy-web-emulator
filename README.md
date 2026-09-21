@@ -3,13 +3,22 @@
   ## Overview
   - Web DMG is a Game Boy Emulator written in C++, compiled to WebAssembly and running in a Next.js frontend.
   - You can try a demo [here.](https://web-dmg.vercel.app/)
+  <img width="400" height="400" alt="main" src="https://github.com/user-attachments/assets/cfb184c4-f309-4a3d-86a6-c19239223242" />
+
 
   ## Features
   - Accurately emulates the Game Boy's CPU, PPU, MMU, and timer.
   - Supports almost the entire Game Boy library. (No Game Boy Color exclusives.)
   - Controlled via keyboard or mobile friendly touch controls.
+  <img width="360" height="693" alt="mobile" src="https://github.com/user-attachments/assets/4cf471e1-70b4-459d-b6e1-a0e3e98c8fa0" />
+
   - Persistent cartidge saves stored in browser localStorage.
+  <img width="400" height="400" alt="save" src="https://github.com/user-attachments/assets/954e1df8-ed2b-49a3-a9f7-667662f88fa8" />
+  
   - Save states, speedup, and pausing.
+  - Several palette options.
+  <img width="400" height="400" alt="palettes" src="https://github.com/user-attachments/assets/0c523654-b6a7-4223-92b5-2ccbc0157c86" />
+
   
   ## Disclaimer
   - This emulator does not condone piracy. Please only use it to play your own legal backups, or free to distribute homebrew games.
@@ -86,6 +95,7 @@
   - Improve Audio
   - Seperate sprite/background palettes as featured on the Game Boy Color
   - Custom palette maker
+  - Support for ROMs in .zip archives
 
   ## Credits/License
   - cpu_instrs by Blargg.
