@@ -18,6 +18,8 @@ public:
     Mmu(Cartridge& cartridge, Ppu& ppu, Apu& apu, Timer& timer, Joypad& joypad);
     ~Mmu();
 
+    void reset();
+
     uint8_t read8(uint16_t address) const;
     void write8(uint16_t address, uint8_t value);
     void requestInterrupt(uint8_t mask);

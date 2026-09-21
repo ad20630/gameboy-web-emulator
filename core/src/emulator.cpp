@@ -20,6 +20,7 @@ void Emulator::reset() {
     ppu_.reset();
     apu_.reset();
     joypad_.reset();
+    mmu_.reset();
 }
 
 void Emulator::loadRom(const uint8_t* data, size_t size) {

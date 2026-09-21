@@ -331,10 +331,22 @@ const PALETTE_GROUP_LABELS: Record<PaletteGroup, string> = {
 };
 
 // Bundled ROMs served from web/public/roms, selectable without a file picker.
-const TEST_ROMS: Record<string, string> = {
-  "cpu_instrs.gb": "/roms/cpu_instrs.gb",
-  "dmg-acid2.gb": "/roms/dmg-acid2.gb",
-};
+const TEST_ROM_GROUPS: { label: string; roms: Record<string, string> }[] = [
+  {
+    label: "Hardware Tests",
+    roms: {
+      "cpu_instrs.gb": "/roms/cpu_instrs.gb",
+      "dmg-acid2.gb": "/roms/dmg-acid2.gb",
+    },
+  },
+  {
+    label: "Homebrew Games",
+    roms: {
+      "Snake.gb": "/roms/Snake.gb",
+      "PandorasBlocks.gbc": "/roms/PandorasBlocks.gbc",
+    },
+  },
+];
 
 const KEY_TO_BUTTON: Record<string, keyof EmulatorModule["Button"]> = {
   ArrowRight: "Right",
@@ -692,10 +704,14 @@ export function EmulatorScreen() {
           <option value="" disabled>
             Select test ROM...
           </option>
-          {Object.entries(TEST_ROMS).map(([label, url]) => (
-            <option key={url} value={url}>
-              {label}
-            </option>
+          {TEST_ROM_GROUPS.map((group) => (
+            <optgroup key={group.label} label={group.label}>
+              {Object.entries(group.roms).map(([label, url]) => (
+                <option key={url} value={url}>
+                  {label}
+                </option>
+              ))}
+            </optgroup>
           ))}
         </select>
         <button

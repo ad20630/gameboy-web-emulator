@@ -30,6 +30,26 @@ Ppu::Ppu() = default;
 Ppu::~Ppu() = default;
 
 void Ppu::reset() {
+    // VRAM/OAM/the framebuffer are left over from whatever ROM last ran in
+    // this emulator instance; clear them so a freshly loaded game doesn't
+    // flash the previous game's tiles/sprites/screen before it finishes
+    // writing its own.
+    vram_.fill(0);
+    oam_.fill(0);
+    framebuffer_.fill(0);
+    registers_.fill(0); // clears stale SCX/SCY/LYC/WY/WX and STAT interrupt-enable bits too
+
+    // We skip the boot ROM entirely, so game code starts executing in the
+    // state the boot ROM would normally hand off: LCD already on (it turns
+    // the LCD on to draw the logo) and BGP/OBPx set to their standard
+    // post-boot values. Games that never re-enable the LCD themselves
+    // (a valid assumption on real hardware) would otherwise hang forever
+    // polling LY for a VBlank that can never arrive.
+    registers_[0] = 0x91; // LCDC: LCD+BG+OBJ enabled, BG tile map/data at their default areas
+    registers_[7] = 0xFC; // BGP
+    registers_[8] = 0xFF; // OBP0
+    registers_[9] = 0xFF; // OBP1
+
     lineDots_ = 0;
     statLine_ = false;
     windowLine_ = 0;

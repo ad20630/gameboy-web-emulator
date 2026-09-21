@@ -22,6 +22,17 @@ Mmu::Mmu(Cartridge& cartridge, Ppu& ppu, Apu& apu, Timer& timer, Joypad& joypad)
     : cartridge_(cartridge), ppu_(ppu), apu_(apu), timer_(timer), joypad_(joypad) {}
 Mmu::~Mmu() = default;
 
+void Mmu::reset() {
+    // WRAM/HRAM/IO are plain memory the previous cartridge may have left
+    // dirty; real hardware powers on with unpredictable RAM contents, but
+    // that's not a state we want to carry over between two ROM loads in the
+    // same emulator instance, so start clean instead.
+    wram_.fill(0);
+    hram_.fill(0);
+    io_.fill(0);
+    ie_ = 0;
+}
+
 void Mmu::requestInterrupt(uint8_t mask) {
     io_[kIfAddress - 0xFF00] |= mask;
 }
