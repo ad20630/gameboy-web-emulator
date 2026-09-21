@@ -10,18 +10,25 @@
   - Accurately emulates the Game Boy's CPU, PPU, MMU, and timer.
   - Supports almost the entire Game Boy library. (No Game Boy Color exclusives.)
   - Controlled via keyboard or mobile friendly touch controls.
-  <img width="360" height="693" alt="mobile" src="https://github.com/user-attachments/assets/4cf471e1-70b4-459d-b6e1-a0e3e98c8fa0" />
-
   - Persistent cartidge saves stored in browser localStorage.
-  <img width="400" height="400" alt="save" src="https://github.com/user-attachments/assets/954e1df8-ed2b-49a3-a9f7-667662f88fa8" />
-  
   - Save states, speedup, and pausing.
-  <img width="400" height="400" alt="savestates" src="https://github.com/user-attachments/assets/c97710ab-5235-4159-8c9d-d6dda72ed61b" />
-
   - Several palette options.
-  <img width="400" height="400" alt="palettes" src="https://github.com/user-attachments/assets/0c523654-b6a7-4223-92b5-2ccbc0157c86" />
 
-  
+  <table>
+    <tr>
+      <td align="center">Touch controls</td>
+      <td align="center">Persistent saves</td>
+      <td align="center">Save states</td>
+      <td align="center">Palette options</td>
+    </tr>
+    <tr>
+      <td align="center"><img height="180" alt="mobile" src="https://github.com/user-attachments/assets/4cf471e1-70b4-459d-b6e1-a0e3e98c8fa0" /></td>
+      <td align="center"><img height="180" alt="save" src="https://github.com/user-attachments/assets/954e1df8-ed2b-49a3-a9f7-667662f88fa8" /></td>
+      <td align="center"><img height="180" alt="savestates" src="https://github.com/user-attachments/assets/c97710ab-5235-4159-8c9d-d6dda72ed61b" /></td>
+      <td align="center"><img height="180" alt="palettes" src="https://github.com/user-attachments/assets/0c523654-b6a7-4223-92b5-2ccbc0157c86" /></td>
+    </tr>
+  </table>
+
   ## Disclaimer
   - This emulator does not condone piracy. Please only use it to play your own legal backups, or free to distribute homebrew games.
 
