@@ -367,6 +367,17 @@ export function EmulatorScreen() {
   const [filledSlots, setFilledSlots] = useState<boolean[]>(() =>
     Array(SAVE_STATE_SLOT_COUNT).fill(false)
   );
+  const [saveFlash, setSaveFlash] = useState(false);
+  const [loadFlash, setLoadFlash] = useState(false);
+  const saveFlashTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const loadFlashTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (saveFlashTimeoutRef.current) clearTimeout(saveFlashTimeoutRef.current);
+      if (loadFlashTimeoutRef.current) clearTimeout(loadFlashTimeoutRef.current);
+    };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -607,6 +618,10 @@ export function EmulatorScreen() {
         bytesToBase64(emulator.getSaveState())
       );
       refreshFilledSlots(cartridgeId);
+
+      setSaveFlash(true);
+      if (saveFlashTimeoutRef.current) clearTimeout(saveFlashTimeoutRef.current);
+      saveFlashTimeoutRef.current = setTimeout(() => setSaveFlash(false), 1500);
     } catch {
       // Storage full/unavailable (e.g. private browsing) - not fatal.
     }
@@ -621,6 +636,10 @@ export function EmulatorScreen() {
     try {
       emulator.loadSaveState(base64ToBytes(saved));
       drawFrame(); // repaint immediately, even while paused
+
+      setLoadFlash(true);
+      if (loadFlashTimeoutRef.current) clearTimeout(loadFlashTimeoutRef.current);
+      loadFlashTimeoutRef.current = setTimeout(() => setLoadFlash(false), 1500);
     } catch {
       // Corrupted save data - ignore rather than crash.
     }
@@ -737,7 +756,7 @@ export function EmulatorScreen() {
           }}
           disabled={!romLoaded}
           title="Pause game"
-          className="w-20 shrink-0 rounded border border-neutral-700 bg-neutral-900 px-3 py-1 text-center text-sm text-neutral-300 disabled:opacity-50"
+          className="w-18 shrink-0 whitespace-nowrap rounded border border-neutral-700 bg-neutral-900 px-2 py-1 text-center text-sm text-neutral-300 disabled:opacity-50"
         >
           {paused ? "Resume" : "Pause"}
         </button>
@@ -747,7 +766,7 @@ export function EmulatorScreen() {
           disabled={!romLoaded}
           aria-pressed={muted}
           title={muted ? "Unmute" : "Mute"}
-          className="w-16 shrink-0 rounded border border-neutral-700 bg-neutral-900 px-3 py-1 text-center text-sm text-neutral-300 disabled:opacity-50"
+          className="w-16 shrink-0 whitespace-nowrap rounded border border-neutral-700 bg-neutral-900 px-2 py-1 text-center text-sm text-neutral-300 disabled:opacity-50"
         >
           {muted ? "Unmute" : "Mute"}
         </button>
@@ -788,18 +807,26 @@ export function EmulatorScreen() {
             onClick={handleSaveState}
             disabled={!romLoaded}
             title="Save state"
-            className="shrink-0 rounded border border-neutral-700 bg-neutral-900 px-3 py-1 text-sm text-neutral-300 disabled:opacity-50"
+            className={`shrink-0 whitespace-nowrap rounded border px-3 py-1 text-sm transition-colors disabled:opacity-50 ${
+              saveFlash
+                ? "border-emerald-500 bg-emerald-900 text-emerald-200"
+                : "border-neutral-700 bg-neutral-900 text-neutral-300"
+            }`}
           >
-            Save
+            {saveFlash ? "Saved!" : "Save"}
           </button>
           <button
             type="button"
             onClick={handleLoadState}
             disabled={!romLoaded || !filledSlots[selectedSlot]}
             title="Load state"
-            className="shrink-0 rounded border border-neutral-700 bg-neutral-900 px-3 py-1 text-sm text-neutral-300 disabled:opacity-50"
+            className={`shrink-0 whitespace-nowrap rounded border px-3 py-1 text-sm transition-colors disabled:opacity-50 ${
+              loadFlash
+                ? "border-emerald-500 bg-emerald-900 text-emerald-200"
+                : "border-neutral-700 bg-neutral-900 text-neutral-300"
+            }`}
           >
-            Load
+            {loadFlash ? "Loaded!" : "Load"}
           </button>
         </div>
       </div>
