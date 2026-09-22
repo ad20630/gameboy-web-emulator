@@ -21,7 +21,7 @@ export function ControlsHelp() {
         onClick={() => setOpen(true)}
         aria-label="Show controls help"
         title="Controls"
-        className="fixed left-4 top-4 z-40 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-outline bg-surface text-xs text-foreground-secondary"
+        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-outline bg-surface text-xs text-foreground-secondary"
       >
         ?
       </button>

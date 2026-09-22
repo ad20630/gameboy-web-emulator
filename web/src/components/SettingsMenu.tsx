@@ -64,7 +64,7 @@ export function SettingsMenu() {
         onClick={() => setOpen(true)}
         aria-label="Show settings"
         title="Settings"
-        className="fixed left-4 top-16 z-40 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-outline bg-surface text-xs text-foreground-secondary"
+        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-outline bg-surface text-xs text-foreground-secondary"
       >
         ⚙
       </button>
