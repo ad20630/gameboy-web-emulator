@@ -21,7 +21,7 @@ export function ControlsHelp() {
         onClick={() => setOpen(true)}
         aria-label="Show controls help"
         title="Controls"
-        className="fixed left-4 top-4 z-40 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-neutral-700 bg-neutral-900 text-xs text-neutral-300"
+        className="fixed left-4 top-4 z-40 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-outline bg-surface text-xs text-foreground-secondary"
       >
         ?
       </button>
@@ -36,26 +36,26 @@ export function ControlsHelp() {
             aria-modal="true"
             aria-label="Controls"
             onClick={(event) => event.stopPropagation()}
-            className="w-full max-w-sm rounded border border-neutral-700 bg-neutral-900 p-4 text-sm text-neutral-300 phone-landscape:max-h-full phone-landscape:overflow-y-auto"
+            className="w-full max-w-sm rounded border border-outline bg-surface p-4 text-sm text-foreground-secondary phone-landscape:max-h-full phone-landscape:overflow-y-auto"
           >
             <div className="mb-3 flex items-center justify-between">
-              <h2 className="font-semibold text-neutral-100">Controls</h2>
+              <h2 className="font-semibold text-foreground">Controls</h2>
               <button
                 type="button"
                 onClick={() => setOpen(false)}
                 aria-label="Close"
-                className="flex h-6 w-6 items-center justify-center rounded-full border border-neutral-700 text-neutral-300"
+                className="flex h-6 w-6 items-center justify-center rounded-full border border-outline text-foreground-secondary"
               >
                 ×
               </button>
             </div>
 
-            <p className="mb-3 text-neutral-400">
+            <p className="mb-3 text-foreground-muted">
               Select a ROM from the file picker or test-ROM dropdown to start playing.
             </p>
 
-            <h3 className="mb-1 font-medium text-neutral-200">Keyboard</h3>
-            <ul className="mb-3 text-neutral-400 space-y-0.5">
+            <h3 className="mb-1 font-medium text-foreground-secondary">Keyboard</h3>
+            <ul className="mb-3 text-foreground-muted space-y-0.5">
               <li>Arrow keys - D-pad</li>
               <li>Z - B button</li>
               <li>X - A button</li>
@@ -63,15 +63,15 @@ export function ControlsHelp() {
               <li>Enter - Start</li>
             </ul>
 
-            <h3 className="mb-1 font-medium text-neutral-200">Touch (mobile)</h3>
-            <p className="mb-3 text-neutral-400">
+            <h3 className="mb-1 font-medium text-foreground-secondary">Touch (mobile)</h3>
+            <p className="mb-3 text-foreground-muted">
               Use the on-screen D-pad and A/B/Select/Start buttons - below the
               game in portrait, or alongside it in landscape (tap the menu
               icon for ROM/save controls).
             </p>
 
-            <h3 className="mb-1 font-medium text-neutral-200">Other</h3>
-            <ul className="space-y-0.5 text-neutral-400">
+            <h3 className="mb-1 font-medium text-foreground-secondary">Other</h3>
+            <ul className="space-y-0.5 text-foreground-muted">
               <li>Pause / Resume - stop and continue emulation</li>
               <li>Mute - silence audio</li>
               <li>1x / 2x / 4x - change emulation speed</li>

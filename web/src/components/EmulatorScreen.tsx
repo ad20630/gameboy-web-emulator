@@ -735,7 +735,7 @@ export function EmulatorScreen() {
           ref={canvasRef}
           width={SCREEN_WIDTH}
           height={SCREEN_HEIGHT}
-          className="border border-neutral-700 bg-black"
+          className="border border-outline bg-black"
           style={{
             imageRendering: "pixelated",
             width: canvasSize.width,
@@ -753,7 +753,7 @@ export function EmulatorScreen() {
         onClick={() => setMenuOpen((prev) => !prev)}
         aria-label={menuOpen ? "Close menu" : "Open menu"}
         aria-expanded={menuOpen}
-        className="absolute right-2 top-2 z-30 hidden h-8 w-8 items-center justify-center rounded-full border border-neutral-700 bg-neutral-900/80 text-neutral-300 phone-landscape:flex"
+        className="absolute right-2 top-2 z-30 hidden h-8 w-8 items-center justify-center rounded-full border border-outline bg-surface-translucent text-foreground-secondary phone-landscape:flex"
       >
         {menuOpen ? "×" : "☰"}
       </button>
@@ -775,7 +775,7 @@ export function EmulatorScreen() {
       >
         <div
           onClick={(event) => event.stopPropagation()}
-          className="flex w-full min-w-0 shrink-0 flex-col items-center gap-3 phone-landscape:w-full phone-landscape:max-w-lg phone-landscape:rounded phone-landscape:border phone-landscape:border-neutral-700 phone-landscape:bg-neutral-950 phone-landscape:p-3"
+          className="flex w-full min-w-0 shrink-0 flex-col items-center gap-3 phone-landscape:w-full phone-landscape:max-w-lg phone-landscape:rounded phone-landscape:border phone-landscape:border-outline phone-landscape:bg-background phone-landscape:p-3"
         >
         <div className="flex w-full min-w-0 shrink-0 flex-wrap items-center gap-3">
           <select
@@ -783,7 +783,7 @@ export function EmulatorScreen() {
             disabled={status !== "ready"}
             onChange={(event) => setSelectedTestRom(event.target.value)}
             autoComplete="off"
-            className="min-w-0 flex-1 truncate rounded border border-neutral-700 bg-neutral-900 px-2 py-1 text-sm text-neutral-300"
+            className="min-w-0 flex-1 truncate rounded border border-outline bg-surface px-2 py-1 text-sm text-foreground-secondary"
           >
             <option value="" disabled>
               Select test ROM...
@@ -803,7 +803,7 @@ export function EmulatorScreen() {
             onClick={handleLoadTestRom}
             disabled={status !== "ready" || !selectedTestRom}
             title="Load test ROM"
-            className="shrink-0 rounded border border-neutral-700 bg-neutral-900 px-3 py-1 text-sm text-neutral-300 disabled:opacity-50"
+            className="shrink-0 rounded border border-outline bg-surface px-3 py-1 text-sm text-foreground-secondary disabled:opacity-50"
           >
             Load
           </button>
@@ -812,7 +812,7 @@ export function EmulatorScreen() {
             onClick={handleReset}
             disabled={!romLoaded}
             title="Reset"
-            className="shrink-0 rounded border border-neutral-700 bg-neutral-900 px-3 py-1 text-sm text-neutral-300 disabled:opacity-50"
+            className="shrink-0 rounded border border-outline bg-surface px-3 py-1 text-sm text-foreground-secondary disabled:opacity-50"
           >
             Reset
           </button>
@@ -825,14 +825,14 @@ export function EmulatorScreen() {
             disabled={status !== "ready"}
             onChange={handleFileChange}
             autoComplete="off"
-            className="min-w-0 flex-1 overflow-hidden text-sm text-neutral-300"
+            className="min-w-0 flex-1 overflow-hidden text-sm text-foreground-secondary"
           />
           <select
             value={paletteKey}
             onChange={(event) =>
               setPaletteKey(event.target.value as keyof typeof PALETTES)
             }
-            className="min-w-0 shrink-0 truncate rounded border border-neutral-700 bg-neutral-900 px-2 py-1 text-sm text-neutral-300"
+            className="min-w-0 shrink-0 truncate rounded border border-outline bg-surface px-2 py-1 text-sm text-foreground-secondary"
           >
             {(["hardware", "boot", "custom"] as const).map((group) => (
               <optgroup key={group} label={PALETTE_GROUP_LABELS[group]}>
@@ -860,8 +860,8 @@ export function EmulatorScreen() {
               title="Pause game"
               className={`w-18 shrink-0 whitespace-nowrap rounded border px-2 py-1 text-center text-sm disabled:opacity-50 ${
                 paused
-                  ? "border-neutral-400 bg-neutral-700 text-neutral-100"
-                  : "border-neutral-700 bg-neutral-900 text-neutral-300"
+                  ? "border-outline-strong bg-surface-strong text-foreground"
+                  : "border-outline bg-surface text-foreground-secondary"
               }`}
             >
               {paused ? "Resume" : "Pause"}
@@ -874,8 +874,8 @@ export function EmulatorScreen() {
               title={muted ? "Unmute" : "Mute"}
               className={`w-16 shrink-0 whitespace-nowrap rounded border px-2 py-1 text-center text-sm disabled:opacity-50 ${
                 muted
-                  ? "border-neutral-400 bg-neutral-700 text-neutral-100"
-                  : "border-neutral-700 bg-neutral-900 text-neutral-300"
+                  ? "border-outline-strong bg-surface-strong text-foreground"
+                  : "border-outline bg-surface text-foreground-secondary"
               }`}
             >
               {muted ? "Unmute" : "Mute"}
@@ -890,8 +890,8 @@ export function EmulatorScreen() {
                   aria-pressed={speed === option}
                   className={`rounded border px-2 py-1 text-sm disabled:opacity-50 ${
                     speed === option
-                      ? "border-neutral-400 bg-neutral-700 text-neutral-100"
-                      : "border-neutral-700 bg-neutral-900 text-neutral-300"
+                      ? "border-outline-strong bg-surface-strong text-foreground"
+                      : "border-outline bg-surface text-foreground-secondary"
                   }`}
                 >
                   {option}x
@@ -905,7 +905,7 @@ export function EmulatorScreen() {
               onChange={(event) => setSelectedSlot(Number(event.target.value))}
               disabled={!romLoaded}
               aria-label="Save state slot"
-              className="min-w-0 shrink-0 rounded border border-neutral-700 bg-neutral-900 px-2 py-1 text-sm text-neutral-300 disabled:opacity-50"
+              className="min-w-0 shrink-0 rounded border border-outline bg-surface px-2 py-1 text-sm text-foreground-secondary disabled:opacity-50"
             >
               {Array.from({ length: SAVE_STATE_SLOT_COUNT }, (_, slot) => (
                 <option key={slot} value={slot}>
@@ -921,7 +921,7 @@ export function EmulatorScreen() {
               className={`shrink-0 whitespace-nowrap rounded border px-3 py-1 text-sm transition-colors disabled:opacity-50 ${
                 saveFlash
                   ? "border-emerald-500 bg-emerald-900 text-emerald-200"
-                  : "border-neutral-700 bg-neutral-900 text-neutral-300"
+                  : "border-outline bg-surface text-foreground-secondary"
               }`}
             >
               {saveFlash ? "Saved!" : "Save"}
@@ -934,14 +934,14 @@ export function EmulatorScreen() {
               className={`shrink-0 whitespace-nowrap rounded border px-3 py-1 text-sm transition-colors disabled:opacity-50 ${
                 loadFlash
                   ? "border-emerald-500 bg-emerald-900 text-emerald-200"
-                  : "border-neutral-700 bg-neutral-900 text-neutral-300"
+                  : "border-outline bg-surface text-foreground-secondary"
               }`}
             >
               {loadFlash ? "Loaded!" : "Load"}
             </button>
           </div>
         </div>
-        <p className="shrink-0 text-sm text-neutral-400">
+        <p className="shrink-0 text-sm text-foreground-muted">
           Status: {status}
           {romLoaded ? (paused ? " · paused" : ` · running${speed !== 1 ? ` (${speed}x)` : ""}`) : ""}
         </p>

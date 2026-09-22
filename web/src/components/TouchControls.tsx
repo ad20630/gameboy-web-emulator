@@ -66,7 +66,13 @@ function PadButton({
 }
 
 const padButtonClass =
-  "flex items-center justify-center border border-neutral-700 bg-neutral-800 text-neutral-200 active:bg-neutral-600";
+  "flex items-center justify-center border border-outline bg-pad text-pad-foreground active:bg-pad-active";
+
+// A/B get their own tokens (see globals.css) instead of the shared pad
+// ones, so a theme can color them separately from the d-pad/Select/Start -
+// the gameboy theme's magenta buttons are the reason this exists.
+const abButtonClass =
+  "flex items-center justify-center border border-outline bg-ab-button text-ab-foreground active:bg-ab-button-active";
 
 function DPad({ disabled, onButtonChange, size = 144 }: TouchControlsProps & { size?: number }) {
   return (
@@ -141,7 +147,7 @@ export function TouchControls({ disabled, onButtonChange }: TouchControlsProps) 
             button="B"
             disabled={disabled}
             onButtonChange={onButtonChange}
-            className={`${padButtonClass} mt-6 h-14 w-14 rounded-full text-lg font-semibold`}
+            className={`${abButtonClass} mt-6 h-14 w-14 rounded-full text-lg font-semibold`}
           >
             B
           </PadButton>
@@ -149,7 +155,7 @@ export function TouchControls({ disabled, onButtonChange }: TouchControlsProps) 
             button="A"
             disabled={disabled}
             onButtonChange={onButtonChange}
-            className={`${padButtonClass} h-14 w-14 rounded-full text-lg font-semibold`}
+            className={`${abButtonClass} h-14 w-14 rounded-full text-lg font-semibold`}
           >
             A
           </PadButton>
@@ -189,7 +195,7 @@ export function TouchControls({ disabled, onButtonChange }: TouchControlsProps) 
               button="B"
               disabled={disabled}
               onButtonChange={onButtonChange}
-              className={`${padButtonClass} h-14 w-14 rounded-full text-lg font-semibold`}
+              className={`${abButtonClass} h-14 w-14 rounded-full text-lg font-semibold`}
             >
               B
             </PadButton>
@@ -197,7 +203,7 @@ export function TouchControls({ disabled, onButtonChange }: TouchControlsProps) 
               button="A"
               disabled={disabled}
               onButtonChange={onButtonChange}
-              className={`${padButtonClass} h-14 w-14 rounded-full text-lg font-semibold`}
+              className={`${abButtonClass} h-14 w-14 rounded-full text-lg font-semibold`}
             >
               A
             </PadButton>

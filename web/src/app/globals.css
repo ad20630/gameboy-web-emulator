@@ -2,6 +2,69 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Theme palette, as CSS custom properties - `:root` is the dark theme
+   (the app's original, default look); `:root[data-theme="light"]` overrides
+   it for light mode. Values pull from Tailwind's own neutral scale via
+   `theme()` rather than restating color numbers here, so the palette stays
+   the single source of truth. */
+:root {
+  --color-background: theme("colors.neutral.950");
+  --color-surface: theme("colors.neutral.900");
+  --color-surface-translucent: theme("colors.neutral.900 / 80%");
+  --color-surface-strong: theme("colors.neutral.700");
+  --color-pad: theme("colors.neutral.800");
+  --color-pad-active: theme("colors.neutral.600");
+  --color-pad-foreground: var(--color-foreground-secondary);
+  /* A/B share the pad's look here - only the gameboy theme sets these to
+     something else. */
+  --color-ab-button: var(--color-pad);
+  --color-ab-button-active: var(--color-pad-active);
+  --color-ab-foreground: var(--color-foreground-secondary);
+  --color-outline: theme("colors.neutral.700");
+  --color-outline-strong: theme("colors.neutral.400");
+  --color-foreground: theme("colors.neutral.100");
+  --color-foreground-secondary: theme("colors.neutral.300");
+  --color-foreground-muted: theme("colors.neutral.400");
+}
+
+:root[data-theme="light"] {
+  --color-background: theme("colors.neutral.100");
+  --color-surface: theme("colors.white");
+  --color-surface-translucent: theme("colors.white / 80%");
+  --color-surface-strong: theme("colors.neutral.300");
+  --color-pad: theme("colors.neutral.200");
+  --color-pad-active: theme("colors.neutral.400");
+  --color-pad-foreground: var(--color-foreground-secondary);
+  --color-ab-button: var(--color-pad);
+  --color-ab-button-active: var(--color-pad-active);
+  --color-ab-foreground: var(--color-foreground-secondary);
+  --color-outline: theme("colors.neutral.300");
+  --color-outline-strong: theme("colors.neutral.500");
+  --color-foreground: theme("colors.neutral.900");
+  --color-foreground-secondary: theme("colors.neutral.700");
+  --color-foreground-muted: theme("colors.neutral.500");
+}
+
+/* Game Boy DMG-01 inspired: beige shell, black d-pad/Select/Start, and the
+   console's signature magenta A/B buttons. */
+:root[data-theme="gameboy"] {
+  --color-background: theme("colors.stone.300");
+  --color-surface: theme("colors.stone.100");
+  --color-surface-translucent: theme("colors.stone.100 / 80%");
+  --color-surface-strong: theme("colors.stone.400");
+  --color-pad: theme("colors.neutral.900");
+  --color-pad-active: theme("colors.neutral.700");
+  --color-pad-foreground: theme("colors.stone.200");
+  --color-ab-button: theme("colors.rose.700");
+  --color-ab-button-active: theme("colors.rose.800");
+  --color-ab-foreground: theme("colors.stone.100");
+  --color-outline: theme("colors.stone.400");
+  --color-outline-strong: theme("colors.stone.600");
+  --color-foreground: theme("colors.stone.900");
+  --color-foreground-secondary: theme("colors.stone.700");
+  --color-foreground-muted: theme("colors.stone.500");
+}
+
 /* html/body deliberately stay scrollable (not `overflow: hidden`) so Chrome
    still recognizes the page as a scroll root and keeps pull-to-refresh
    working. `main` below (h-svh + overflow-hidden) is the actual scroll
