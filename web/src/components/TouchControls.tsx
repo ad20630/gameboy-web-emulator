@@ -71,10 +71,10 @@ const padButtonClass =
 // Visible up to the `md` breakpoint; a physical keyboard is assumed above it.
 export function TouchControls({ disabled, onButtonChange }: TouchControlsProps) {
   return (
-    <div className="flex w-full max-w-[480px] select-none items-center justify-between gap-4 pb-[env(safe-area-inset-bottom)] md:hidden">
+    <div className="-mt-2 flex w-full max-w-[480px] select-none items-center justify-between gap-4 pb-[env(safe-area-inset-bottom)] md:hidden">
       <div
         className="grid grid-cols-3 grid-rows-3 gap-1"
-        style={{ width: 132, height: 132 }}
+        style={{ width: 144, height: 144 }}
       >
         <div />
         <PadButton

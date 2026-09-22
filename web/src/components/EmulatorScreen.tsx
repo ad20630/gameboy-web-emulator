@@ -764,54 +764,56 @@ export function EmulatorScreen() {
         </select>
       </div>
       <div className="flex w-full min-w-0 flex-wrap items-center justify-center gap-2">
-        <button
-          type="button"
-          onClick={() => {
-            audioPlayerRef.current?.resume();
-            setPaused((prev) => !prev);
-          }}
-          disabled={!romLoaded}
-          aria-pressed={paused}
-          title="Pause game"
-          className={`w-18 shrink-0 whitespace-nowrap rounded border px-2 py-1 text-center text-sm disabled:opacity-50 ${
-            paused
-              ? "border-neutral-400 bg-neutral-700 text-neutral-100"
-              : "border-neutral-700 bg-neutral-900 text-neutral-300"
-          }`}
-        >
-          {paused ? "Resume" : "Pause"}
-        </button>
-        <button
-          type="button"
-          onClick={() => setMuted((prev) => !prev)}
-          disabled={!romLoaded}
-          aria-pressed={muted}
-          title={muted ? "Unmute" : "Mute"}
-          className={`w-16 shrink-0 whitespace-nowrap rounded border px-2 py-1 text-center text-sm disabled:opacity-50 ${
-            muted
-              ? "border-neutral-400 bg-neutral-700 text-neutral-100"
-              : "border-neutral-700 bg-neutral-900 text-neutral-300"
-          }`}
-        >
-          {muted ? "Unmute" : "Mute"}
-        </button>
-        <div className="mr-auto flex shrink-0 gap-1" role="group" aria-label="Emulation speed">
-          {SPEED_OPTIONS.map((option) => (
-            <button
-              key={option}
-              type="button"
-              onClick={() => setSpeed(option)}
-              disabled={!romLoaded}
-              aria-pressed={speed === option}
-              className={`rounded border px-2 py-1 text-sm disabled:opacity-50 ${
-                speed === option
-                  ? "border-neutral-400 bg-neutral-700 text-neutral-100"
-                  : "border-neutral-700 bg-neutral-900 text-neutral-300"
-              }`}
-            >
-              {option}x
-            </button>
-          ))}
+        <div className="flex w-full flex-wrap items-center justify-center gap-2 md:w-auto md:justify-start md:mr-auto">
+          <button
+            type="button"
+            onClick={() => {
+              audioPlayerRef.current?.resume();
+              setPaused((prev) => !prev);
+            }}
+            disabled={!romLoaded}
+            aria-pressed={paused}
+            title="Pause game"
+            className={`w-18 shrink-0 whitespace-nowrap rounded border px-2 py-1 text-center text-sm disabled:opacity-50 ${
+              paused
+                ? "border-neutral-400 bg-neutral-700 text-neutral-100"
+                : "border-neutral-700 bg-neutral-900 text-neutral-300"
+            }`}
+          >
+            {paused ? "Resume" : "Pause"}
+          </button>
+          <button
+            type="button"
+            onClick={() => setMuted((prev) => !prev)}
+            disabled={!romLoaded}
+            aria-pressed={muted}
+            title={muted ? "Unmute" : "Mute"}
+            className={`w-16 shrink-0 whitespace-nowrap rounded border px-2 py-1 text-center text-sm disabled:opacity-50 ${
+              muted
+                ? "border-neutral-400 bg-neutral-700 text-neutral-100"
+                : "border-neutral-700 bg-neutral-900 text-neutral-300"
+            }`}
+          >
+            {muted ? "Unmute" : "Mute"}
+          </button>
+          <div className="flex shrink-0 gap-1" role="group" aria-label="Emulation speed">
+            {SPEED_OPTIONS.map((option) => (
+              <button
+                key={option}
+                type="button"
+                onClick={() => setSpeed(option)}
+                disabled={!romLoaded}
+                aria-pressed={speed === option}
+                className={`rounded border px-2 py-1 text-sm disabled:opacity-50 ${
+                  speed === option
+                    ? "border-neutral-400 bg-neutral-700 text-neutral-100"
+                    : "border-neutral-700 bg-neutral-900 text-neutral-300"
+                }`}
+              >
+                {option}x
+              </button>
+            ))}
+          </div>
         </div>
         <div className="flex min-w-0 shrink-0 flex-wrap items-center justify-center gap-2">
           <select
