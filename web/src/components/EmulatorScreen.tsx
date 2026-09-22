@@ -825,7 +825,7 @@ export function EmulatorScreen() {
             disabled={status !== "ready"}
             onChange={handleFileChange}
             autoComplete="off"
-            className="min-w-0 flex-1 overflow-hidden text-sm text-foreground-secondary"
+            className="min-w-0 flex-1 overflow-hidden text-sm text-foreground-secondary file:mr-3 file:rounded-sm file:border file:border-outline file:bg-surface file:px-3 file:py-1 file:text-sm file:text-foreground-secondary"
           />
           <select
             value={paletteKey}
