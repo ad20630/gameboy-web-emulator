@@ -387,8 +387,6 @@ export function EmulatorScreen() {
     width: SCREEN_WIDTH,
     height: SCREEN_HEIGHT,
   });
-  // TEMPORARY - remove once the mobile sizing mismatch is diagnosed.
-  const [debugInfo, setDebugInfo] = useState("");
   const saveFlashTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const loadFlashTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -422,19 +420,6 @@ export function EmulatorScreen() {
         width: Math.floor(fitted.width),
         height: Math.floor(fitted.height),
       });
-      // TEMPORARY - remove once the mobile sizing mismatch is diagnosed.
-      setDebugInfo(
-        [
-          `inner: ${window.innerWidth}x${window.innerHeight}`,
-          `dpr: ${window.devicePixelRatio}`,
-          `wrapper rect: ${Math.round(width)}x${Math.round(height)}`,
-          `outer rect: ${wrapper.parentElement ? Math.round(wrapper.parentElement.getBoundingClientRect().width) : "?"}x${wrapper.parentElement ? Math.round(wrapper.parentElement.getBoundingClientRect().height) : "?"}`,
-          `main rect: ${document.querySelector("main") ? Math.round(document.querySelector("main")!.getBoundingClientRect().width) : "?"}x${document.querySelector("main") ? Math.round(document.querySelector("main")!.getBoundingClientRect().height) : "?"}`,
-          `pointer-coarse: ${window.matchMedia("(pointer: coarse)").matches}`,
-          `orientation: ${window.matchMedia("(orientation: landscape)").matches ? "landscape" : "portrait"}`,
-          `canvas: ${Math.floor(fitted.width)}x${Math.floor(fitted.height)}`,
-        ].join(" | ")
-      );
     };
 
     const rect = wrapper.getBoundingClientRect();
@@ -742,10 +727,6 @@ export function EmulatorScreen() {
 
   return (
     <div className="relative flex w-full min-h-0 max-w-[480px] flex-1 flex-col items-center gap-3 touch:max-w-none phone-landscape:flex-row phone-landscape:items-stretch phone-landscape:gap-0">
-      {/* TEMPORARY - remove once the mobile sizing mismatch is diagnosed. */}
-      <div className="fixed inset-x-0 top-0 z-[999] break-all bg-red-950 p-2 text-sm font-bold leading-tight text-yellow-300">
-        {debugInfo || "(no debug info yet)"}
-      </div>
       <div
         ref={canvasWrapperRef}
         className="flex w-full min-h-0 flex-1 items-center justify-center phone-landscape:h-full phone-landscape:w-auto"
