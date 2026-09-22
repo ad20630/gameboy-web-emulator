@@ -783,7 +783,7 @@ export function EmulatorScreen() {
             disabled={status !== "ready"}
             onChange={(event) => setSelectedTestRom(event.target.value)}
             autoComplete="off"
-            className="min-w-0 flex-1 truncate rounded border border-outline bg-surface px-2 py-1 text-sm text-foreground-secondary"
+            className="min-w-0 flex-1 truncate rounded-sm border border-outline bg-surface px-2 py-1 text-sm text-foreground-secondary"
           >
             <option value="" disabled>
               Select test ROM...
@@ -803,7 +803,7 @@ export function EmulatorScreen() {
             onClick={handleLoadTestRom}
             disabled={status !== "ready" || !selectedTestRom}
             title="Load test ROM"
-            className="shrink-0 rounded border border-outline bg-surface px-3 py-1 text-sm text-foreground-secondary disabled:opacity-50"
+            className="shrink-0 rounded-sm border border-outline bg-surface px-3 py-1 text-sm text-foreground-secondary disabled:opacity-50"
           >
             Load
           </button>
@@ -812,7 +812,7 @@ export function EmulatorScreen() {
             onClick={handleReset}
             disabled={!romLoaded}
             title="Reset"
-            className="shrink-0 rounded border border-outline bg-surface px-3 py-1 text-sm text-foreground-secondary disabled:opacity-50"
+            className="shrink-0 rounded-sm border border-outline bg-surface px-3 py-1 text-sm text-foreground-secondary disabled:opacity-50"
           >
             Reset
           </button>
@@ -832,7 +832,7 @@ export function EmulatorScreen() {
             onChange={(event) =>
               setPaletteKey(event.target.value as keyof typeof PALETTES)
             }
-            className="min-w-0 shrink-0 truncate rounded border border-outline bg-surface px-2 py-1 text-sm text-foreground-secondary"
+            className="min-w-0 shrink-0 truncate rounded-sm border border-outline bg-surface px-2 py-1 text-sm text-foreground-secondary"
           >
             {(["hardware", "boot", "custom"] as const).map((group) => (
               <optgroup key={group} label={PALETTE_GROUP_LABELS[group]}>
@@ -905,7 +905,7 @@ export function EmulatorScreen() {
               onChange={(event) => setSelectedSlot(Number(event.target.value))}
               disabled={!romLoaded}
               aria-label="Save state slot"
-              className="min-w-0 shrink-0 rounded border border-outline bg-surface px-2 py-1 text-sm text-foreground-secondary disabled:opacity-50"
+              className="min-w-0 shrink-0 rounded-sm border border-outline bg-surface px-2 py-1 text-sm text-foreground-secondary disabled:opacity-50"
             >
               {Array.from({ length: SAVE_STATE_SLOT_COUNT }, (_, slot) => (
                 <option key={slot} value={slot}>

@@ -79,7 +79,7 @@ export function SettingsMenu() {
             aria-modal="true"
             aria-label="Settings"
             onClick={(event) => event.stopPropagation()}
-            className="w-full max-w-sm rounded border border-outline bg-surface p-4 text-sm text-foreground-secondary phone-landscape:max-h-full phone-landscape:overflow-y-auto"
+            className="w-full max-w-sm rounded-sm border border-outline bg-surface p-4 text-sm text-foreground-secondary phone-landscape:max-h-full phone-landscape:overflow-y-auto"
           >
             <div className="mb-3 flex items-center justify-between">
               <h2 className="font-semibold text-foreground">Theme</h2>
