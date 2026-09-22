@@ -1,10 +1,18 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 
 import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Web DMG",
   description: "A Game Boy emulator written in C++, running in the browser via WebAssembly.",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({
@@ -14,7 +22,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="min-h-screen bg-neutral-950 text-neutral-100">
+      <body className="min-h-svh bg-neutral-950 text-neutral-100">
         {children}
       </body>
     </html>

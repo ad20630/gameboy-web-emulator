@@ -685,15 +685,20 @@ export function EmulatorScreen() {
   }, [romLoaded, drawFrame]);
 
   return (
-    <div className="flex w-full max-w-[480px] flex-col items-center gap-3">
-      <canvas
-        ref={canvasRef}
-        width={SCREEN_WIDTH}
-        height={SCREEN_HEIGHT}
-        className="w-full border border-neutral-700 bg-black"
-        style={{ imageRendering: "pixelated", aspectRatio: `${SCREEN_WIDTH} / ${SCREEN_HEIGHT}` }}
-      />
-      <div className="flex w-full min-w-0 flex-wrap items-center gap-3">
+    <div className="flex w-full min-h-0 max-w-[480px] flex-1 flex-col items-center gap-3">
+      <div className="flex w-full min-h-0 flex-1 items-center justify-center">
+        <canvas
+          ref={canvasRef}
+          width={SCREEN_WIDTH}
+          height={SCREEN_HEIGHT}
+          className="h-full w-auto max-w-full border border-neutral-700 bg-black"
+          style={{
+            imageRendering: "pixelated",
+            aspectRatio: `${SCREEN_WIDTH} / ${SCREEN_HEIGHT}`,
+          }}
+        />
+      </div>
+      <div className="flex w-full min-w-0 shrink-0 flex-wrap items-center gap-3">
         <select
           value={selectedTestRom}
           disabled={status !== "ready"}
@@ -733,7 +738,7 @@ export function EmulatorScreen() {
           Reset
         </button>
       </div>
-      <div className="flex w-full min-w-0 flex-wrap items-center gap-3">
+      <div className="flex w-full min-w-0 shrink-0 flex-wrap items-center gap-3">
         <input
           ref={fileInputRef}
           type="file"
@@ -763,7 +768,7 @@ export function EmulatorScreen() {
           ))}
         </select>
       </div>
-      <div className="flex w-full min-w-0 flex-wrap items-center justify-center gap-2">
+      <div className="flex w-full min-w-0 shrink-0 flex-wrap items-center justify-center gap-2">
         <div className="flex w-full flex-wrap items-center justify-center gap-2 md:w-auto md:justify-start md:mr-auto">
           <button
             type="button"
@@ -857,7 +862,7 @@ export function EmulatorScreen() {
           </button>
         </div>
       </div>
-      <p className="text-sm text-neutral-400">
+      <p className="shrink-0 text-sm text-neutral-400">
         Status: {status}
         {romLoaded ? (paused ? " · paused" : ` · running${speed !== 1 ? ` (${speed}x)` : ""}`) : ""}
       </p>

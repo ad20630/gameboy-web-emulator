@@ -3,9 +3,9 @@ import { ControlsHelp } from "@/components/ControlsHelp";
 
 export default function Home() {
   return (
-    <main className="flex min-h-screen flex-col items-center gap-6 p-4 sm:p-12">
+    <main className="flex h-svh flex-col items-center gap-4 overflow-hidden p-4 sm:gap-6 sm:p-12">
       <ControlsHelp />
-      <h1 className="text-2xl font-semibold tracking-tight">
+      <h1 className="shrink-0 text-2xl font-semibold tracking-tight">
         Web DMG
       </h1>
       <EmulatorScreen />
