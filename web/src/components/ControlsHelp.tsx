@@ -36,7 +36,7 @@ export function ControlsHelp() {
             aria-modal="true"
             aria-label="Controls"
             onClick={(event) => event.stopPropagation()}
-            className="w-full max-w-sm rounded border border-neutral-700 bg-neutral-900 p-4 text-sm text-neutral-300"
+            className="w-full max-w-sm rounded border border-neutral-700 bg-neutral-900 p-4 text-sm text-neutral-300 phone-landscape:max-h-full phone-landscape:overflow-y-auto"
           >
             <div className="mb-3 flex items-center justify-between">
               <h2 className="font-semibold text-neutral-100">Controls</h2>
