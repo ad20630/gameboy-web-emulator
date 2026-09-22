@@ -361,6 +361,7 @@ const KEY_TO_BUTTON: Record<string, keyof EmulatorModule["Button"]> = {
 
 export function EmulatorScreen() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const canvasWrapperRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const moduleRef = useRef<EmulatorModule | null>(null);
   const emulatorRef = useRef<EmulatorInstance | null>(null);
@@ -381,6 +382,13 @@ export function EmulatorScreen() {
   );
   const [saveFlash, setSaveFlash] = useState(false);
   const [loadFlash, setLoadFlash] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [canvasSize, setCanvasSize] = useState({
+    width: SCREEN_WIDTH,
+    height: SCREEN_HEIGHT,
+  });
+  // TEMPORARY - remove once the mobile sizing mismatch is diagnosed.
+  const [debugInfo, setDebugInfo] = useState("");
   const saveFlashTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const loadFlashTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -389,6 +397,54 @@ export function EmulatorScreen() {
       if (saveFlashTimeoutRef.current) clearTimeout(saveFlashTimeoutRef.current);
       if (loadFlashTimeoutRef.current) clearTimeout(loadFlashTimeoutRef.current);
     };
+  }, []);
+
+  // CSS's `aspect-ratio` can only grow the auto side of a box to match a
+  // definite one - it won't shrink a definite side back down when the
+  // *other* constraint (a max-width or max-height) turns out to be the
+  // tighter one. That means a pure-CSS box can fit a container that's too
+  // wide, or one that's too tall, but not both, so on an oddly-shaped
+  // screen it distorts. Measuring the wrapper and computing an exact
+  // display size here keeps the canvas at the true 160:144 ratio no
+  // matter which dimension is actually the limiting one.
+  useEffect(() => {
+    const wrapper = canvasWrapperRef.current;
+    if (!wrapper) return;
+
+    const targetRatio = SCREEN_WIDTH / SCREEN_HEIGHT;
+    const updateSize = (width: number, height: number) => {
+      if (width <= 0 || height <= 0) return;
+      const fitted =
+        width / height > targetRatio
+          ? { width: height * targetRatio, height }
+          : { width, height: width / targetRatio };
+      setCanvasSize({
+        width: Math.floor(fitted.width),
+        height: Math.floor(fitted.height),
+      });
+      // TEMPORARY - remove once the mobile sizing mismatch is diagnosed.
+      setDebugInfo(
+        [
+          `inner: ${window.innerWidth}x${window.innerHeight}`,
+          `dpr: ${window.devicePixelRatio}`,
+          `wrapper rect: ${Math.round(width)}x${Math.round(height)}`,
+          `outer rect: ${wrapper.parentElement ? Math.round(wrapper.parentElement.getBoundingClientRect().width) : "?"}x${wrapper.parentElement ? Math.round(wrapper.parentElement.getBoundingClientRect().height) : "?"}`,
+          `main rect: ${document.querySelector("main") ? Math.round(document.querySelector("main")!.getBoundingClientRect().width) : "?"}x${document.querySelector("main") ? Math.round(document.querySelector("main")!.getBoundingClientRect().height) : "?"}`,
+          `pointer-coarse: ${window.matchMedia("(pointer: coarse)").matches}`,
+          `orientation: ${window.matchMedia("(orientation: landscape)").matches ? "landscape" : "portrait"}`,
+          `canvas: ${Math.floor(fitted.width)}x${Math.floor(fitted.height)}`,
+        ].join(" | ")
+      );
+    };
+
+    const rect = wrapper.getBoundingClientRect();
+    updateSize(rect.width, rect.height);
+
+    const observer = new ResizeObserver(([entry]) => {
+      updateSize(entry.contentRect.width, entry.contentRect.height);
+    });
+    observer.observe(wrapper);
+    return () => observer.disconnect();
   }, []);
 
   useEffect(() => {
@@ -685,187 +741,232 @@ export function EmulatorScreen() {
   }, [romLoaded, drawFrame]);
 
   return (
-    <div className="flex w-full min-h-0 max-w-[480px] flex-1 flex-col items-center gap-3">
-      <div className="flex w-full min-h-0 flex-1 items-center justify-center">
+    <div className="relative flex w-full min-h-0 max-w-[480px] flex-1 flex-col items-center gap-3 touch:max-w-none phone-landscape:flex-row phone-landscape:items-stretch phone-landscape:gap-0">
+      {/* TEMPORARY - remove once the mobile sizing mismatch is diagnosed. */}
+      <div className="fixed inset-x-0 top-0 z-[999] break-all bg-red-950 p-2 text-sm font-bold leading-tight text-yellow-300">
+        {debugInfo || "(no debug info yet)"}
+      </div>
+      <div
+        ref={canvasWrapperRef}
+        className="flex w-full min-h-0 flex-1 items-center justify-center phone-landscape:h-full phone-landscape:w-auto"
+      >
         <canvas
           ref={canvasRef}
           width={SCREEN_WIDTH}
           height={SCREEN_HEIGHT}
-          className="h-full w-auto max-w-full border border-neutral-700 bg-black"
+          className="border border-neutral-700 bg-black"
           style={{
             imageRendering: "pixelated",
-            aspectRatio: `${SCREEN_WIDTH} / ${SCREEN_HEIGHT}`,
+            width: canvasSize.width,
+            height: canvasSize.height,
           }}
         />
       </div>
-      <div className="flex w-full min-w-0 shrink-0 flex-wrap items-center gap-3">
-        <select
-          value={selectedTestRom}
-          disabled={status !== "ready"}
-          onChange={(event) => setSelectedTestRom(event.target.value)}
-          autoComplete="off"
-          className="min-w-0 flex-1 truncate rounded border border-neutral-700 bg-neutral-900 px-2 py-1 text-sm text-neutral-300"
+
+      {/* Menu toggle: the secondary controls below are docked inline in
+          portrait, but tucked behind this button in landscape on touch
+          devices - there's no vertical room there to show them alongside
+          a full-height canvas and the d-pad/button overlay. */}
+      <button
+        type="button"
+        onClick={() => setMenuOpen((prev) => !prev)}
+        aria-label={menuOpen ? "Close menu" : "Open menu"}
+        aria-expanded={menuOpen}
+        className="absolute right-2 top-2 z-30 hidden h-8 w-8 items-center justify-center rounded-full border border-neutral-700 bg-neutral-900/80 text-neutral-300 phone-landscape:flex"
+      >
+        {menuOpen ? "×" : "☰"}
+      </button>
+
+      {/* Width-capped independently of the canvas above: the outer
+          `relative` wrapper goes full-width on touch devices so the canvas
+          can use all the available space on a wide tablet, but these rows
+          still need to stay a readable column width rather than stretching
+          edge to edge. `phone-landscape:contents` drops this wrapper's own
+          box on phones so it doesn't claim a slot in the outer flex-row
+          alongside the canvas - its child below positions itself via the
+          phone drawer's own `absolute` instead. */}
+      <div className="w-full shrink-0 touch:max-w-[480px] phone-landscape:contents">
+      <div
+        onClick={() => setMenuOpen(false)}
+        className={`flex w-full min-w-0 shrink-0 flex-col items-center gap-3 phone-landscape:absolute phone-landscape:inset-0 phone-landscape:z-20 phone-landscape:justify-center phone-landscape:bg-black/60 phone-landscape:p-3 ${
+          menuOpen ? "" : "phone-landscape:hidden"
+        }`}
+      >
+        <div
+          onClick={(event) => event.stopPropagation()}
+          className="flex w-full min-w-0 shrink-0 flex-col items-center gap-3 phone-landscape:max-h-full phone-landscape:w-full phone-landscape:max-w-xs phone-landscape:overflow-y-auto phone-landscape:rounded phone-landscape:border phone-landscape:border-neutral-700 phone-landscape:bg-neutral-950 phone-landscape:p-3"
         >
-          <option value="" disabled>
-            Select test ROM...
-          </option>
-          {TEST_ROM_GROUPS.map((group) => (
-            <optgroup key={group.label} label={group.label}>
-              {Object.entries(group.roms).map(([label, url]) => (
-                <option key={url} value={url}>
-                  {label}
-                </option>
-              ))}
-            </optgroup>
-          ))}
-        </select>
-        <button
-          type="button"
-          onClick={handleLoadTestRom}
-          disabled={status !== "ready" || !selectedTestRom}
-          title="Load test ROM"
-          className="shrink-0 rounded border border-neutral-700 bg-neutral-900 px-3 py-1 text-sm text-neutral-300 disabled:opacity-50"
-        >
-          Load
-        </button>
-        <button
-          type="button"
-          onClick={handleReset}
-          disabled={!romLoaded}
-          title="Reset"
-          className="shrink-0 rounded border border-neutral-700 bg-neutral-900 px-3 py-1 text-sm text-neutral-300 disabled:opacity-50"
-        >
-          Reset
-        </button>
-      </div>
-      <div className="flex w-full min-w-0 shrink-0 flex-wrap items-center gap-3">
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept=".gb,.gbc"
-          disabled={status !== "ready"}
-          onChange={handleFileChange}
-          autoComplete="off"
-          className="min-w-0 flex-1 overflow-hidden text-sm text-neutral-300"
-        />
-        <select
-          value={paletteKey}
-          onChange={(event) =>
-            setPaletteKey(event.target.value as keyof typeof PALETTES)
-          }
-          className="min-w-0 shrink-0 truncate rounded border border-neutral-700 bg-neutral-900 px-2 py-1 text-sm text-neutral-300"
-        >
-          {(["hardware", "boot", "custom"] as const).map((group) => (
-            <optgroup key={group} label={PALETTE_GROUP_LABELS[group]}>
-              {Object.entries(PALETTE_LABELS)
-                .filter(([key]) => paletteGroup(key) === group)
-                .map(([key, label]) => (
-                  <option key={key} value={key}>
+        <div className="flex w-full min-w-0 shrink-0 flex-wrap items-center gap-3">
+          <select
+            value={selectedTestRom}
+            disabled={status !== "ready"}
+            onChange={(event) => setSelectedTestRom(event.target.value)}
+            autoComplete="off"
+            className="min-w-0 flex-1 truncate rounded border border-neutral-700 bg-neutral-900 px-2 py-1 text-sm text-neutral-300"
+          >
+            <option value="" disabled>
+              Select test ROM...
+            </option>
+            {TEST_ROM_GROUPS.map((group) => (
+              <optgroup key={group.label} label={group.label}>
+                {Object.entries(group.roms).map(([label, url]) => (
+                  <option key={url} value={url}>
                     {label}
                   </option>
                 ))}
-            </optgroup>
-          ))}
-        </select>
-      </div>
-      <div className="flex w-full min-w-0 shrink-0 flex-wrap items-center justify-center gap-2">
-        <div className="flex w-full flex-wrap items-center justify-center gap-2 md:w-auto md:justify-start md:mr-auto">
-          <button
-            type="button"
-            onClick={() => {
-              audioPlayerRef.current?.resume();
-              setPaused((prev) => !prev);
-            }}
-            disabled={!romLoaded}
-            aria-pressed={paused}
-            title="Pause game"
-            className={`w-18 shrink-0 whitespace-nowrap rounded border px-2 py-1 text-center text-sm disabled:opacity-50 ${
-              paused
-                ? "border-neutral-400 bg-neutral-700 text-neutral-100"
-                : "border-neutral-700 bg-neutral-900 text-neutral-300"
-            }`}
-          >
-            {paused ? "Resume" : "Pause"}
-          </button>
-          <button
-            type="button"
-            onClick={() => setMuted((prev) => !prev)}
-            disabled={!romLoaded}
-            aria-pressed={muted}
-            title={muted ? "Unmute" : "Mute"}
-            className={`w-16 shrink-0 whitespace-nowrap rounded border px-2 py-1 text-center text-sm disabled:opacity-50 ${
-              muted
-                ? "border-neutral-400 bg-neutral-700 text-neutral-100"
-                : "border-neutral-700 bg-neutral-900 text-neutral-300"
-            }`}
-          >
-            {muted ? "Unmute" : "Mute"}
-          </button>
-          <div className="flex shrink-0 gap-1" role="group" aria-label="Emulation speed">
-            {SPEED_OPTIONS.map((option) => (
-              <button
-                key={option}
-                type="button"
-                onClick={() => setSpeed(option)}
-                disabled={!romLoaded}
-                aria-pressed={speed === option}
-                className={`rounded border px-2 py-1 text-sm disabled:opacity-50 ${
-                  speed === option
-                    ? "border-neutral-400 bg-neutral-700 text-neutral-100"
-                    : "border-neutral-700 bg-neutral-900 text-neutral-300"
-                }`}
-              >
-                {option}x
-              </button>
-            ))}
-          </div>
-        </div>
-        <div className="flex min-w-0 shrink-0 flex-wrap items-center justify-center gap-2">
-          <select
-            value={selectedSlot}
-            onChange={(event) => setSelectedSlot(Number(event.target.value))}
-            disabled={!romLoaded}
-            aria-label="Save state slot"
-            className="min-w-0 shrink-0 rounded border border-neutral-700 bg-neutral-900 px-2 py-1 text-sm text-neutral-300 disabled:opacity-50"
-          >
-            {Array.from({ length: SAVE_STATE_SLOT_COUNT }, (_, slot) => (
-              <option key={slot} value={slot}>
-                Slot {slot + 1}
-              </option>
+              </optgroup>
             ))}
           </select>
           <button
             type="button"
-            onClick={handleSaveState}
-            disabled={!romLoaded}
-            title="Save state"
-            className={`shrink-0 whitespace-nowrap rounded border px-3 py-1 text-sm transition-colors disabled:opacity-50 ${
-              saveFlash
-                ? "border-emerald-500 bg-emerald-900 text-emerald-200"
-                : "border-neutral-700 bg-neutral-900 text-neutral-300"
-            }`}
+            onClick={handleLoadTestRom}
+            disabled={status !== "ready" || !selectedTestRom}
+            title="Load test ROM"
+            className="shrink-0 rounded border border-neutral-700 bg-neutral-900 px-3 py-1 text-sm text-neutral-300 disabled:opacity-50"
           >
-            {saveFlash ? "Saved!" : "Save"}
+            Load
           </button>
           <button
             type="button"
-            onClick={handleLoadState}
-            disabled={!romLoaded || !filledSlots[selectedSlot]}
-            title="Load state"
-            className={`shrink-0 whitespace-nowrap rounded border px-3 py-1 text-sm transition-colors disabled:opacity-50 ${
-              loadFlash
-                ? "border-emerald-500 bg-emerald-900 text-emerald-200"
-                : "border-neutral-700 bg-neutral-900 text-neutral-300"
-            }`}
+            onClick={handleReset}
+            disabled={!romLoaded}
+            title="Reset"
+            className="shrink-0 rounded border border-neutral-700 bg-neutral-900 px-3 py-1 text-sm text-neutral-300 disabled:opacity-50"
           >
-            {loadFlash ? "Loaded!" : "Load"}
+            Reset
           </button>
         </div>
+        <div className="flex w-full min-w-0 shrink-0 flex-wrap items-center gap-3">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".gb,.gbc"
+            disabled={status !== "ready"}
+            onChange={handleFileChange}
+            autoComplete="off"
+            className="min-w-0 flex-1 overflow-hidden text-sm text-neutral-300"
+          />
+          <select
+            value={paletteKey}
+            onChange={(event) =>
+              setPaletteKey(event.target.value as keyof typeof PALETTES)
+            }
+            className="min-w-0 shrink-0 truncate rounded border border-neutral-700 bg-neutral-900 px-2 py-1 text-sm text-neutral-300"
+          >
+            {(["hardware", "boot", "custom"] as const).map((group) => (
+              <optgroup key={group} label={PALETTE_GROUP_LABELS[group]}>
+                {Object.entries(PALETTE_LABELS)
+                  .filter(([key]) => paletteGroup(key) === group)
+                  .map(([key, label]) => (
+                    <option key={key} value={key}>
+                      {label}
+                    </option>
+                  ))}
+              </optgroup>
+            ))}
+          </select>
+        </div>
+        <div className="flex w-full min-w-0 shrink-0 flex-wrap items-center justify-center gap-2">
+          <div className="flex w-full flex-wrap items-center justify-center gap-2 md:w-auto md:justify-start md:mr-auto">
+            <button
+              type="button"
+              onClick={() => {
+                audioPlayerRef.current?.resume();
+                setPaused((prev) => !prev);
+              }}
+              disabled={!romLoaded}
+              aria-pressed={paused}
+              title="Pause game"
+              className={`w-18 shrink-0 whitespace-nowrap rounded border px-2 py-1 text-center text-sm disabled:opacity-50 ${
+                paused
+                  ? "border-neutral-400 bg-neutral-700 text-neutral-100"
+                  : "border-neutral-700 bg-neutral-900 text-neutral-300"
+              }`}
+            >
+              {paused ? "Resume" : "Pause"}
+            </button>
+            <button
+              type="button"
+              onClick={() => setMuted((prev) => !prev)}
+              disabled={!romLoaded}
+              aria-pressed={muted}
+              title={muted ? "Unmute" : "Mute"}
+              className={`w-16 shrink-0 whitespace-nowrap rounded border px-2 py-1 text-center text-sm disabled:opacity-50 ${
+                muted
+                  ? "border-neutral-400 bg-neutral-700 text-neutral-100"
+                  : "border-neutral-700 bg-neutral-900 text-neutral-300"
+              }`}
+            >
+              {muted ? "Unmute" : "Mute"}
+            </button>
+            <div className="flex shrink-0 gap-1" role="group" aria-label="Emulation speed">
+              {SPEED_OPTIONS.map((option) => (
+                <button
+                  key={option}
+                  type="button"
+                  onClick={() => setSpeed(option)}
+                  disabled={!romLoaded}
+                  aria-pressed={speed === option}
+                  className={`rounded border px-2 py-1 text-sm disabled:opacity-50 ${
+                    speed === option
+                      ? "border-neutral-400 bg-neutral-700 text-neutral-100"
+                      : "border-neutral-700 bg-neutral-900 text-neutral-300"
+                  }`}
+                >
+                  {option}x
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="flex min-w-0 shrink-0 flex-wrap items-center justify-center gap-2">
+            <select
+              value={selectedSlot}
+              onChange={(event) => setSelectedSlot(Number(event.target.value))}
+              disabled={!romLoaded}
+              aria-label="Save state slot"
+              className="min-w-0 shrink-0 rounded border border-neutral-700 bg-neutral-900 px-2 py-1 text-sm text-neutral-300 disabled:opacity-50"
+            >
+              {Array.from({ length: SAVE_STATE_SLOT_COUNT }, (_, slot) => (
+                <option key={slot} value={slot}>
+                  Slot {slot + 1}
+                </option>
+              ))}
+            </select>
+            <button
+              type="button"
+              onClick={handleSaveState}
+              disabled={!romLoaded}
+              title="Save state"
+              className={`shrink-0 whitespace-nowrap rounded border px-3 py-1 text-sm transition-colors disabled:opacity-50 ${
+                saveFlash
+                  ? "border-emerald-500 bg-emerald-900 text-emerald-200"
+                  : "border-neutral-700 bg-neutral-900 text-neutral-300"
+              }`}
+            >
+              {saveFlash ? "Saved!" : "Save"}
+            </button>
+            <button
+              type="button"
+              onClick={handleLoadState}
+              disabled={!romLoaded || !filledSlots[selectedSlot]}
+              title="Load state"
+              className={`shrink-0 whitespace-nowrap rounded border px-3 py-1 text-sm transition-colors disabled:opacity-50 ${
+                loadFlash
+                  ? "border-emerald-500 bg-emerald-900 text-emerald-200"
+                  : "border-neutral-700 bg-neutral-900 text-neutral-300"
+              }`}
+            >
+              {loadFlash ? "Loaded!" : "Load"}
+            </button>
+          </div>
+        </div>
+        <p className="shrink-0 text-sm text-neutral-400">
+          Status: {status}
+          {romLoaded ? (paused ? " · paused" : ` · running${speed !== 1 ? ` (${speed}x)` : ""}`) : ""}
+        </p>
+        </div>
       </div>
-      <p className="shrink-0 text-sm text-neutral-400">
-        Status: {status}
-        {romLoaded ? (paused ? " · paused" : ` · running${speed !== 1 ? ` (${speed}x)` : ""}`) : ""}
-      </p>
+      </div>
       <TouchControls disabled={!romLoaded} onButtonChange={setButton} />
     </div>
   );

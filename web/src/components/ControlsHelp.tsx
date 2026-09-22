@@ -65,7 +65,9 @@ export function ControlsHelp() {
 
             <h3 className="mb-1 font-medium text-neutral-200">Touch (mobile)</h3>
             <p className="mb-3 text-neutral-400">
-              Use the on-screen D-pad, A/B, and Select/Start buttons below the game.
+              Use the on-screen D-pad and A/B/Select/Start buttons - below the
+              game in portrait, or alongside it in landscape (tap the menu
+              icon for ROM/save controls).
             </p>
 
             <h3 className="mb-1 font-medium text-neutral-200">Other</h3>

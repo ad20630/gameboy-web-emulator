@@ -68,82 +68,142 @@ function PadButton({
 const padButtonClass =
   "flex items-center justify-center border border-neutral-700 bg-neutral-800 text-neutral-200 active:bg-neutral-600";
 
-// Visible up to the `md` breakpoint; a physical keyboard is assumed above it.
+function DPad({ disabled, onButtonChange, size = 144 }: TouchControlsProps & { size?: number }) {
+  return (
+    <div
+      className="pointer-events-auto grid grid-cols-3 grid-rows-3 gap-1"
+      style={{ width: size, height: size }}
+    >
+      <div />
+      <PadButton
+        button="Up"
+        disabled={disabled}
+        onButtonChange={onButtonChange}
+        className={`${padButtonClass} rounded-t-md`}
+      />
+      <div />
+      <PadButton
+        button="Left"
+        disabled={disabled}
+        onButtonChange={onButtonChange}
+        className={`${padButtonClass} rounded-l-md`}
+      />
+      <div />
+      <PadButton
+        button="Right"
+        disabled={disabled}
+        onButtonChange={onButtonChange}
+        className={`${padButtonClass} rounded-r-md`}
+      />
+      <div />
+      <PadButton
+        button="Down"
+        disabled={disabled}
+        onButtonChange={onButtonChange}
+        className={`${padButtonClass} rounded-b-md`}
+      />
+      <div />
+    </div>
+  );
+}
+
+// Touch controls are shown on any coarse-pointer (touchscreen) device,
+// regardless of viewport width - a width breakpoint like `md` doesn't work
+// because phones/tablets routinely exceed it in landscape.
 export function TouchControls({ disabled, onButtonChange }: TouchControlsProps) {
   return (
-    <div className="-mt-2 flex w-full max-w-[480px] shrink-0 select-none items-center justify-between gap-4 pb-[env(safe-area-inset-bottom)] md:hidden">
-      <div
-        className="grid grid-cols-3 grid-rows-3 gap-1"
-        style={{ width: 144, height: 144 }}
-      >
-        <div />
-        <PadButton
-          button="Up"
-          disabled={disabled}
-          onButtonChange={onButtonChange}
-          className={`${padButtonClass} rounded-t-md`}
-        />
-        <div />
-        <PadButton
-          button="Left"
-          disabled={disabled}
-          onButtonChange={onButtonChange}
-          className={`${padButtonClass} rounded-l-md`}
-        />
-        <div />
-        <PadButton
-          button="Right"
-          disabled={disabled}
-          onButtonChange={onButtonChange}
-          className={`${padButtonClass} rounded-r-md`}
-        />
-        <div />
-        <PadButton
-          button="Down"
-          disabled={disabled}
-          onButtonChange={onButtonChange}
-          className={`${padButtonClass} rounded-b-md`}
-        />
-        <div />
+    <>
+      {/* Portrait / stacked-below-the-screen layout. */}
+      <div className="-mt-2 hidden w-full max-w-[480px] shrink-0 select-none items-center justify-between gap-4 pb-[env(safe-area-inset-bottom)] touch:flex touch-landscape:hidden">
+        <DPad disabled={disabled} onButtonChange={onButtonChange} />
+
+        <div className="flex gap-2">
+          <PadButton
+            button="Select"
+            disabled={disabled}
+            onButtonChange={onButtonChange}
+            className={`${padButtonClass} rounded-full px-3 py-1 text-[10px] uppercase tracking-wide`}
+          >
+            Select
+          </PadButton>
+          <PadButton
+            button="Start"
+            disabled={disabled}
+            onButtonChange={onButtonChange}
+            className={`${padButtonClass} rounded-full px-3 py-1 text-[10px] uppercase tracking-wide`}
+          >
+            Start
+          </PadButton>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3" style={{ width: 116 }}>
+          <PadButton
+            button="B"
+            disabled={disabled}
+            onButtonChange={onButtonChange}
+            className={`${padButtonClass} mt-6 h-14 w-14 rounded-full text-lg font-semibold`}
+          >
+            B
+          </PadButton>
+          <PadButton
+            button="A"
+            disabled={disabled}
+            onButtonChange={onButtonChange}
+            className={`${padButtonClass} h-14 w-14 rounded-full text-lg font-semibold`}
+          >
+            A
+          </PadButton>
+        </div>
       </div>
 
-      <div className="flex gap-2">
-        <PadButton
-          button="Select"
-          disabled={disabled}
-          onButtonChange={onButtonChange}
-          className={`${padButtonClass} rounded-full px-3 py-1 text-[10px] uppercase tracking-wide`}
-        >
-          Select
-        </PadButton>
-        <PadButton
-          button="Start"
-          disabled={disabled}
-          onButtonChange={onButtonChange}
-          className={`${padButtonClass} rounded-full px-3 py-1 text-[10px] uppercase tracking-wide`}
-        >
-          Start
-        </PadButton>
-      </div>
+      {/* Landscape overlay: d-pad pinned to the left edge, A/B/Select/Start
+          pinned to the right edge, both anchored toward the bottom
+          alongside the canvas rather than stacked below it - this is what
+          reclaims the vertical space landscape doesn't have. Applies on
+          any landscape touch device, phone or tablet. */}
+      <div className="pointer-events-none absolute inset-0 z-10 hidden select-none items-end justify-between pb-[max(0.75rem,env(safe-area-inset-bottom))] pl-[max(0.75rem,env(safe-area-inset-left))] pr-[max(0.75rem,env(safe-area-inset-right))] touch-landscape:flex">
+        <DPad disabled={disabled} onButtonChange={onButtonChange} size={124} />
 
-      <div className="grid grid-cols-2 gap-3" style={{ width: 116 }}>
-        <PadButton
-          button="B"
-          disabled={disabled}
-          onButtonChange={onButtonChange}
-          className={`${padButtonClass} mt-6 h-14 w-14 rounded-full text-lg font-semibold`}
-        >
-          B
-        </PadButton>
-        <PadButton
-          button="A"
-          disabled={disabled}
-          onButtonChange={onButtonChange}
-          className={`${padButtonClass} h-14 w-14 rounded-full text-lg font-semibold`}
-        >
-          A
-        </PadButton>
+        <div className="pointer-events-auto flex flex-col items-center gap-4">
+          <div className="flex gap-2">
+            <PadButton
+              button="Select"
+              disabled={disabled}
+              onButtonChange={onButtonChange}
+              className={`${padButtonClass} rounded-full px-3 py-1 text-[10px] uppercase tracking-wide`}
+            >
+              Select
+            </PadButton>
+            <PadButton
+              button="Start"
+              disabled={disabled}
+              onButtonChange={onButtonChange}
+              className={`${padButtonClass} rounded-full px-3 py-1 text-[10px] uppercase tracking-wide`}
+            >
+              Start
+            </PadButton>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <PadButton
+              button="B"
+              disabled={disabled}
+              onButtonChange={onButtonChange}
+              className={`${padButtonClass} h-14 w-14 rounded-full text-lg font-semibold`}
+            >
+              B
+            </PadButton>
+            <PadButton
+              button="A"
+              disabled={disabled}
+              onButtonChange={onButtonChange}
+              className={`${padButtonClass} h-14 w-14 rounded-full text-lg font-semibold`}
+            >
+              A
+            </PadButton>
+          </div>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
