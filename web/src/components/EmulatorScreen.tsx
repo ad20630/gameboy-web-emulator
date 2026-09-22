@@ -775,7 +775,7 @@ export function EmulatorScreen() {
       >
         <div
           onClick={(event) => event.stopPropagation()}
-          className="flex w-full min-w-0 shrink-0 flex-col items-center gap-3 phone-landscape:max-h-full phone-landscape:w-full phone-landscape:max-w-xs phone-landscape:overflow-y-auto phone-landscape:rounded phone-landscape:border phone-landscape:border-neutral-700 phone-landscape:bg-neutral-950 phone-landscape:p-3"
+          className="flex w-full min-w-0 shrink-0 flex-col items-center gap-3 phone-landscape:w-full phone-landscape:max-w-lg phone-landscape:rounded phone-landscape:border phone-landscape:border-neutral-700 phone-landscape:bg-neutral-950 phone-landscape:p-3"
         >
         <div className="flex w-full min-w-0 shrink-0 flex-wrap items-center gap-3">
           <select
