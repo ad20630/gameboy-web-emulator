@@ -111,5 +111,5 @@
   - cpu_instrs by Blargg.
   - dmg-acid2 by Matt Curie.
   - Snake by Yvar de Goffau.
-  - Pandora's Blocks by Randy Thiemann.
+  - Pandora's Blocks by Pandora Nova.
   - This software is published under the MIT licence.
