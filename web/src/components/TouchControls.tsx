@@ -57,7 +57,7 @@ function PadButton({
       onPointerCancel={release}
       onPointerLeave={release}
       onContextMenu={(event) => event.preventDefault()}
-      className={`select-none disabled:opacity-40 ${className}`}
+      className={`select-none ${className}`}
       style={{ touchAction: "none", WebkitTouchCallout: "none" }}
     >
       {children}
