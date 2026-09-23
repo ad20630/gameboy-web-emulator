@@ -113,23 +113,24 @@
   --color-foreground-muted: var(--color-stone-500);
 }
 
-/* Game Boy Advance inspired: indigo shell and white A/B buttons. */
+/* Game Boy Advance inspired: indigo shell and white A/B buttons. The purples
+   are custom low-chroma values; Tailwind's violet scale is too saturated. */
 :root[data-theme="gba"] {
-  --color-background: var(--color-violet-950);
-  --color-surface: var(--color-violet-900);
-  --color-surface-translucent: theme("colors.violet.900 / 80%");
-  --color-surface-strong: var(--color-violet-700);
+  --color-background: oklch(28% 0.09 290);
+  --color-surface: oklch(35% 0.10 290);
+  --color-surface-translucent: oklch(35% 0.10 290 / 80%);
+  --color-surface-strong: oklch(45% 0.12 290);
   --color-pad: var(--color-white);
-  --color-pad-active: var(--color-violet-100);
-  --color-pad-foreground: var(--color-violet-900);
+  --color-pad-active: oklch(92% 0.03 290);
+  --color-pad-foreground: oklch(35% 0.10 290);
   --color-ab-button: var(--color-white);
-  --color-ab-button-active: var(--color-violet-100);
-  --color-ab-foreground: var(--color-violet-900);
+  --color-ab-button-active: oklch(92% 0.03 290);
+  --color-ab-foreground: oklch(35% 0.10 290);
   --color-outline: var(--color-neutral-400);
   --color-outline-strong: var(--color-neutral-300);
   --color-foreground: var(--color-neutral-100);
   --color-foreground-secondary: var(--color-neutral-200);
-  --color-foreground-muted: var(--color-violet-400);
+  --color-foreground-muted: oklch(68% 0.07 290);
 }
 
 /* html/body deliberately stay scrollable (not `overflow: hidden`) so Chrome
