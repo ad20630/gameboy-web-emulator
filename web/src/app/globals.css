@@ -95,7 +95,7 @@
 
 /* Game Boy DMG-01 inspired: beige shell, black d-pad/Select/Start, and the
    console's signature magenta A/B buttons. */
-:root[data-theme="gameboy"] {
+:root[data-theme="dmg"] {
   --color-background: var(--color-stone-300);
   --color-surface: var(--color-stone-100);
   --color-surface-translucent: theme("colors.stone.100 / 80%");
@@ -111,6 +111,25 @@
   --color-foreground: var(--color-stone-900);
   --color-foreground-secondary: var(--color-stone-700);
   --color-foreground-muted: var(--color-stone-500);
+}
+
+/* Game Boy Advance inspired: indigo shell and white A/B buttons. */
+:root[data-theme="gba"] {
+  --color-background: var(--color-violet-950);
+  --color-surface: var(--color-violet-900);
+  --color-surface-translucent: theme("colors.violet.900 / 80%");
+  --color-surface-strong: var(--color-violet-700);
+  --color-pad: var(--color-white);
+  --color-pad-active: var(--color-violet-100);
+  --color-pad-foreground: var(--color-violet-900);
+  --color-ab-button: var(--color-white);
+  --color-ab-button-active: var(--color-violet-100);
+  --color-ab-foreground: var(--color-violet-900);
+  --color-outline: var(--color-neutral-400);
+  --color-outline-strong: var(--color-neutral-300);
+  --color-foreground: var(--color-neutral-100);
+  --color-foreground-secondary: var(--color-neutral-200);
+  --color-foreground-muted: var(--color-violet-400);
 }
 
 /* html/body deliberately stay scrollable (not `overflow: hidden`) so Chrome

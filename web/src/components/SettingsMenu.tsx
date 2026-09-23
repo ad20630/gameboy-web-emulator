@@ -2,12 +2,13 @@
 
 import { useEffect, useState } from "react";
 
-type Theme = "dark" | "light" | "gameboy";
+type Theme = "dark" | "light" | "dmg" | "gba";
 
 const THEME_OPTIONS: { value: Theme; label: string }[] = [
   { value: "dark", label: "Dark" },
   { value: "light", label: "Light" },
-  { value: "gameboy", label: "Game Boy" },
+  { value: "dmg", label: "Brick" },
+  { value: "gba", label: "Advanced" },
 ];
 
 function applyTheme(theme: Theme) {
@@ -25,7 +26,9 @@ function applyTheme(theme: Theme) {
 
 function readTheme(): Theme {
   const attr = document.documentElement.getAttribute("data-theme");
-  return attr === "light" || attr === "gameboy" ? attr : "dark";
+  return attr === "light" || attr === "dmg" || attr === "gba"
+    ? attr
+    : "dark";
 }
 
 export function SettingsMenu() {
