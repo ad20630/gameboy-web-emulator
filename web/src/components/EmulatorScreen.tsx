@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { loadEmulatorModule } from "@/lib/wasm/loadEmulator";
 import { GbAudioPlayer } from "@/lib/audio/GbAudioPlayer";
 import { TouchControls } from "@/components/TouchControls";
+import { useIntegerScaling } from "@/lib/settings";
 import type { EmulatorInstance, EmulatorModule } from "@/lib/wasm/types";
 
 type LoadStatus = "loading" | "ready" | "error";
@@ -387,6 +388,7 @@ export function EmulatorScreen() {
     width: SCREEN_WIDTH,
     height: SCREEN_HEIGHT,
   });
+  const integerScaling = useIntegerScaling();
   const saveFlashTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const loadFlashTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -412,6 +414,27 @@ export function EmulatorScreen() {
     const targetRatio = SCREEN_WIDTH / SCREEN_HEIGHT;
     const updateSize = (width: number, height: number) => {
       if (width <= 0 || height <= 0) return;
+      if (integerScaling) {
+        // Scale by a whole number of *device* pixels per Game Boy pixel so
+        // every pixel is the same size on high-DPI screens too. The canvas
+        // is border-box, so leave room for its 1px border on each side.
+        const dpr = window.devicePixelRatio || 1;
+        const border = 2;
+        const scale = Math.floor(
+          Math.min(
+            ((width - border) * dpr) / SCREEN_WIDTH,
+            ((height - border) * dpr) / SCREEN_HEIGHT
+          )
+        );
+        // Too small for even 1x: fall through to the regular fit.
+        if (scale >= 1) {
+          setCanvasSize({
+            width: (SCREEN_WIDTH * scale) / dpr + border,
+            height: (SCREEN_HEIGHT * scale) / dpr + border,
+          });
+          return;
+        }
+      }
       const fitted =
         width / height > targetRatio
           ? { width: height * targetRatio, height }
@@ -430,7 +453,7 @@ export function EmulatorScreen() {
     });
     observer.observe(wrapper);
     return () => observer.disconnect();
-  }, []);
+  }, [integerScaling]);
 
   useEffect(() => {
     let cancelled = false;

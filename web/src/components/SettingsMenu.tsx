@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 
+import { setIntegerScaling, useIntegerScaling } from "@/lib/settings";
+
 type Theme = "dark" | "light" | "dmg" | "gba";
 
 const THEME_OPTIONS: { value: Theme; label: string }[] = [
@@ -40,6 +42,7 @@ export function SettingsMenu() {
   // legitimate effect (reading an external, non-React-owned source), not a
   // value derivable from props/state.
   const [theme, setTheme] = useState<Theme>("dark");
+  const integerScaling = useIntegerScaling();
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -104,6 +107,29 @@ export function SettingsMenu() {
                   aria-pressed={theme === option.value}
                   className={`flex-1 rounded border px-3 py-1 text-sm ${
                     theme === option.value
+                      ? "border-outline-strong bg-surface-strong text-foreground"
+                      : "border-outline bg-surface text-foreground-secondary"
+                  }`}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+            <h2 className="mb-3 mt-4 font-semibold text-foreground">
+              Integer Scaling
+            </h2>
+            <div className="flex gap-2" role="group" aria-label="Integer scaling">
+              {[
+                { value: false, label: "Off" },
+                { value: true, label: "On" },
+              ].map((option) => (
+                <button
+                  key={option.label}
+                  type="button"
+                  onClick={() => setIntegerScaling(option.value)}
+                  aria-pressed={integerScaling === option.value}
+                  className={`flex-1 rounded border px-3 py-1 text-sm ${
+                    integerScaling === option.value
                       ? "border-outline-strong bg-surface-strong text-foreground"
                       : "border-outline bg-surface text-foreground-secondary"
                   }`}
