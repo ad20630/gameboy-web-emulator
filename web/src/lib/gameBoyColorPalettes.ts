@@ -1,0 +1,147 @@
+// Palettes the Game Boy Color boot ROM assigns to specific licensed Nintendo
+// games when they run on a GBC. Each entry
+// is a game's title hash (plus the title's 4th letter where two games share a
+// hash) and its 12 colors: 4 BG, 4 OBJ0, 4 OBJ1 as RRGGBB, lightest first.
+
+export type Rgb = [number, number, number];
+
+interface GamePaletteEntry {
+  hash: number;
+  letter?: number; // 4th title byte, only set where the hash alone is ambiguous
+  game: string; // first known release, for reference
+  colors: string;
+}
+
+const ENTRIES: GamePaletteEntry[] = [
+  { hash: 0xFF, game: "Balloon Kid (USA, Europe)", colors: "FFFFFFFF9C00FF0000000000FFFFFFFF9C00FF0000000000FFFFFFFF9C00FF0000000000" },
+  { hash: 0x71, game: "Tetris Blast (USA, Europe)", colors: "FFFFFFFF9C00FF0000000000FFFFFFFF9C00FF0000000000FFFFFFFF9C00FF0000000000" },
+  { hash: 0xDB, game: "Tetris (World)", colors: "FFFFFFFFFF00FF0000000000FFFFFFFFFF00FF0000000000FFFFFFFFFF00FF0000000000" },
+  { hash: 0x15, game: "Pocket Monsters - Pikachu (Japan) (Rev 0A)", colors: "FFFFFFFFFF00FF0000000000FFFFFFFFFF00FF0000000000FFFFFFFFFF00FF0000000000" },
+  { hash: 0x88, game: "Alleyway (World)", colors: "A59CFFFFFF00006300000000A59CFFFFFF00006300000000A59CFFFFFF00006300000000" },
+  { hash: 0x16, game: "Yakuman (Japan)", colors: "FFFFFFFFAD63843100000000FFFFFFFFAD63843100000000FFFFFFFFAD63843100000000" },
+  { hash: 0x92, game: "F-1 Race (World)", colors: "FFFFFFFFAD63843100000000FFFFFFFFAD63843100000000FFFFFFFFAD63843100000000" },
+  { hash: 0x35, game: "Mario no Picross (Japan)", colors: "FFFFFFFFAD63843100000000FFFFFFFFAD63843100000000FFFFFFFFAD63843100000000" },
+  { hash: 0x75, game: "Picross 2 (Japan)", colors: "FFFFFFFFAD63843100000000FFFFFFFFAD63843100000000FFFFFFFFAD63843100000000" },
+  { hash: 0x99, game: "Kirby no Kirakira Kids (Japan)", colors: "FFFFFFFFAD63843100000000FFFFFFFFAD63843100000000FFFFFFFFAD63843100000000" },
+  { hash: 0x0C, game: "Nigel Mansell's World Championship Racing (Europe)", colors: "FFFFFFFFAD63843100000000FFFFFFFFAD63843100000000FFFFFFFFAD63843100000000" },
+  { hash: 0xB7, game: "Game Boy Gallery (Europe)", colors: "FFFFFFFFAD63843100000000FFFFFFFFAD63843100000000FFFFFFFFAD63843100000000" },
+  { hash: 0x67, game: "Kirby's Star Stacker (USA, Europe)", colors: "FFFFFFFFAD63843100000000FFFFFFFFAD63843100000000FFFFFFFFAD63843100000000" },
+  { hash: 0xE8, game: "Space Invaders (Europe)", colors: "000000008484FFDE00FFFFFF000000008484FFDE00FFFFFF000000008484FFDE00FFFFFF" },
+  { hash: 0x28, letter: 0x41, game: "Arcade Classic No. 3 - Galaga & Galaxian (USA)", colors: "000000008484FFDE00FFFFFF000000008484FFDE00FFFFFF000000008484FFDE00FFFFFF" },
+  { hash: 0xA5, letter: 0x41, game: "Solar Striker (World)", colors: "000000008484FFDE00FFFFFF000000008484FFDE00FFFFFF000000008484FFDE00FFFFFF" },
+  { hash: 0x58, game: "X (Japan)", colors: "FFFFFFA5A5A5525252000000FFFFFFA5A5A5525252000000FFFFFFA5A5A5525252000000" },
+  { hash: 0x6F, game: "Pocket Camera (Japan) (Rev A)", colors: "FFFFFFFFCE009C6300000000FFFFFFFFCE009C6300000000FFFFFFFFCE009C6300000000" },
+  { hash: 0x8C, game: "Radar Mission (Japan)", colors: "FFFFFFADAD8442737B000000FFFFFFFF7300944200000000FFFFFFADAD8442737B000000" },
+  { hash: 0x61, letter: 0x45, game: "Pocket Monsters Ao (Japan)", colors: "FFFFFF63A5FF0000FF000000FFFFFFFF8484943A3A000000FFFFFF63A5FF0000FF000000" },
+  { hash: 0xD3, letter: 0x52, game: "Kaeru no Tame ni Kane wa Naru (Japan)", colors: "FFFFFF8C8CDE52528C000000FFFFFFFF8484943A3A000000FFFFFF8C8CDE52528C000000" },
+  { hash: 0x14, game: "Game Boy Camera Gold (USA)", colors: "FFFFFFFF8484943A3A000000FFFFFF7BFF31008400000000FFFFFFFF8484943A3A000000" },
+  { hash: 0xAA, game: "James Bond 007 (USA, Europe)", colors: "FFFFFF7BFF310063C5000000FFFFFFFF8484943A3A000000FFFFFF7BFF310063C5000000" },
+  { hash: 0x3C, game: "Dr. Mario (World)", colors: "FFFFFF63A5FF0000FF000000FFFFFF63A5FF0000FF000000FFFFFFFF8484943A3A000000" },
+  { hash: 0x9C, game: "Pinocchio (Europe)", colors: "FFFFFF8C8CDE52528C000000FFFFFF8C8CDE52528C000000FFC542FFD600943A004A0000" },
+  { hash: 0xB3, letter: 0x55, game: "Moguranya (Japan)", colors: "FFFFFFADAD8442737B000000FFFFFFFF7300944200000000FFFFFFFF7300944200000000" },
+  { hash: 0x34, game: "Game Boy Gallery (Japan)", colors: "FFFFFF7BFF00B57300000000FFFFFFFF8484943A3A000000FFFFFFFF8484943A3A000000" },
+  { hash: 0x66, letter: 0x45, game: "Game Boy Gallery 2 (Australia)", colors: "FFFFFF7BFF00B57300000000FFFFFFFF8484943A3A000000FFFFFFFF8484943A3A000000" },
+  { hash: 0xF4, letter: 0x20, game: "Game & Watch Gallery (Europe)", colors: "FFFFFF7BFF00B57300000000FFFFFFFF8484943A3A000000FFFFFFFF8484943A3A000000" },
+  { hash: 0x3D, game: "Yoshi (USA)", colors: "FFFFFF52FF00FF4200000000FFFFFFFF8484943A3A000000FFFFFFFF8484943A3A000000" },
+  { hash: 0x6A, letter: 0x49, game: "Mario & Yoshi (Europe)", colors: "FFFFFF52FF00FF4200000000FFFFFFFF8484943A3A000000FFFFFFFF8484943A3A000000" },
+  { hash: 0x19, game: "Donkey Kong (World)", colors: "FFFFFFFF9C00FF0000000000FFFFFFFF8484943A3A000000FFFFFFFF8484943A3A000000" },
+  { hash: 0x1D, game: "Kirby no Pinball (Japan)", colors: "A59CFFFFFF00006300000000FF6352D60000630000000000FF6352D60000630000000000" },
+  { hash: 0x46, letter: 0x45, game: "Super Mario Land (World)", colors: "B5B5FFFFFF94AD5A42000000000000FFFFFFFF8484943A3A000000FFFFFFFF8484943A3A" },
+  { hash: 0x0D, letter: 0x45, game: "Pocket Bomberman (Europe)", colors: "FFFFFF8C8CDE52528C000000FFC542FFD600943A004A0000FFC542FFD600943A004A0000" },
+  { hash: 0xBF, letter: 0x20, game: "Kid Icarus - Of Myths and Monsters (USA, Europe)", colors: "FFFFFF8C8CDE52528C000000FFFFFFFF8484943A3A000000FFFFFFFF8484943A3A000000" },
+  { hash: 0x4B, game: "Play Action Football (USA)", colors: "FFFFFF7BFF31008400000000FFFFFFFF8484943A3A000000FFFFFFFF8484943A3A000000" },
+  { hash: 0x90, game: "Nintendo World Cup (USA, Europe)", colors: "FFFFFF7BFF31008400000000FFFFFFFF8484943A3A000000FFFFFFFF8484943A3A000000" },
+  { hash: 0x9A, game: "Arcade Classic No. 1 - Asteroids & Missile Command (USA, Europe)", colors: "FFFFFF7BFF31008400000000FFFFFFFF8484943A3A000000FFFFFFFF8484943A3A000000" },
+  { hash: 0xBD, game: "Toy Story (Europe)", colors: "FFFFFF7BFF31008400000000FFFFFFFF8484943A3A000000FFFFFFFF8484943A3A000000" },
+  { hash: 0x28, letter: 0x46, game: "Golf (World)", colors: "FFFFFF7BFF31008400000000FFFFFFFF8484943A3A000000FFFFFFFF8484943A3A000000" },
+  { hash: 0x97, game: "King of the Zoo (Europe)", colors: "FFFFFFFFAD63843100000000FFFFFF63A5FF0000FF000000FFFFFF63A5FF0000FF000000" },
+  { hash: 0x39, game: "Dynablaster (Europe)", colors: "FFFFFFFFAD63843100000000FFFFFF63A5FF0000FF000000FFFFFF63A5FF0000FF000000" },
+  { hash: 0x43, game: "Chessmaster, The (Europe)", colors: "FFFFFFFFAD63843100000000FFFFFF63A5FF0000FF000000FFFFFF63A5FF0000FF000000" },
+  { hash: 0xA5, letter: 0x52, game: "Battletoads in Ragnarok's World (Europe)", colors: "FFFFFFFFAD63843100000000FFFFFF7BFF31008400000000FFFFFF7BFF31008400000000" },
+  { hash: 0x3F, game: "Tetris Plus (USA, Europe)", colors: "FFFFFF7BFF310063C5000000FFFFFFFF8484943A3A000000FFFFFFFF8484943A3A000000" },
+  { hash: 0xC6, letter: 0x20, game: "Ken Griffey Jr. presents Major League Baseball (USA, Europe)", colors: "FFFFFF7BFF310063C5000000FFFFFFFF8484943A3A000000FFFFFFFF8484943A3A000000" },
+  { hash: 0x18, letter: 0x49, game: "Wario Blast Featuring Bomberman! (USA, Europe)", colors: "FFFFFF7BFF310063C5000000FFFFFFFF8484943A3A000000FFFFFFFF8484943A3A000000" },
+  { hash: 0x66, letter: 0x4C, game: "Arcade Classic No. 2 - Centipede & Millipede (USA, Europe)", colors: "FFFFFF7BFF310063C5000000FFFFFFFF8484943A3A000000FFFFFFFF8484943A3A000000" },
+  { hash: 0x95, game: "Yoshi no Panepon (Japan)", colors: "FFFFFF52FF00FF4200000000FFFFFF52FF00FF4200000000FFFFFF5ABDFFFF00000000FF" },
+  { hash: 0xB3, letter: 0x52, game: "Tetris Attack (USA)", colors: "FFFFFF52FF00FF4200000000FFFFFF52FF00FF4200000000FFFFFF5ABDFFFF00000000FF" },
+  { hash: 0x3E, game: "Yoshi no Cookie (Japan)", colors: "FFFFFFFF9C00FF0000000000FFFFFFFF9C00FF0000000000FFFFFF5ABDFFFF00000000FF" },
+  { hash: 0xE0, game: "Yoshi's Cookie (USA, Europe)", colors: "FFFFFFFF9C00FF0000000000FFFFFFFF9C00FF0000000000FFFFFF5ABDFFFF00000000FF" },
+  { hash: 0xF2, game: "Qix (World)", colors: "FFFFFFFFFF00FF0000000000FFFFFFFFFF00FF0000000000FFFFFF5ABDFFFF00000000FF" },
+  { hash: 0x69, game: "Tetris Flash (Japan)", colors: "FFFFFFFFFF00FF0000000000FFFFFFFFFF00FF0000000000FFFFFF5ABDFFFF00000000FF" },
+  { hash: 0x0D, letter: 0x52, game: "Tetris 2 (Europe)", colors: "FFFFFFFFFF00FF0000000000FFFFFFFFFF00FF0000000000FFFFFF5ABDFFFF00000000FF" },
+  { hash: 0x59, game: "Wario Land - Super Mario Land 3 (World)", colors: "FFFFFFADAD8442737B000000FFFFFFFF7300944200000000FFFFFF5ABDFFFF00000000FF" },
+  { hash: 0xC6, letter: 0x41, game: "Game Boy Wars (Japan)", colors: "FFFFFFADAD8442737B000000FFFFFFFF7300944200000000FFFFFF5ABDFFFF00000000FF" },
+  { hash: 0xA8, game: "Super Donkey Kong GB (Japan)", colors: "FFFF9C94B5FF639473003A3AFFC542FFD600943A004A0000FFFFFFFF8484943A3A000000" },
+  { hash: 0x86, game: "Donkey Kong Land (USA, Europe)", colors: "FFFF9C94B5FF639473003A3AFFC542FFD600943A004A0000FFFFFFFF8484943A3A000000" },
+  { hash: 0xD1, game: "Tennis (World)", colors: "6BFF00FFFFFFFF524A000000FFFFFFFFFFFF63A5FF0000FFFFFFFFFFAD63843100000000" },
+  { hash: 0xF0, game: "Top Rank Tennis (USA)", colors: "6BFF00FFFFFFFF524A000000FFFFFFFFFFFF63A5FF0000FFFFFFFFFFAD63843100000000" },
+  { hash: 0xCE, game: "Top Ranking Tennis (Europe)", colors: "6BFF00FFFFFFFF524A000000FFFFFFFFFFFF63A5FF0000FFFFFFFFFFAD63843100000000" },
+  { hash: 0xBF, letter: 0x43, game: "Soccer (Europe) (En,Fr,De)", colors: "6BFF00FFFFFFFF524A000000FFFFFFFFFFFF63A5FF0000FFFFFFFFFFAD63843100000000" },
+  { hash: 0x36, game: "Baseball (World)", colors: "52DE00FF8400FFFF00FFFFFFFFFFFFFFFFFF63A5FF0000FFFFFFFFFF8484943A3A000000" },
+  { hash: 0x5C, game: "Hoshi no Kirby (Japan)", colors: "A59CFFFFFF00006300000000FF6352D600006300000000000000FFFFFFFFFFFF7B0084FF" },
+  { hash: 0x49, game: "Kirby's Dream Land (USA, Europe)", colors: "A59CFFFFFF00006300000000FF6352D600006300000000000000FFFFFFFFFFFF7B0084FF" },
+  { hash: 0xB3, letter: 0x42, game: "Hoshi no Kirby 2 (Japan)", colors: "A59CFFFFFF00006300000000FF6352D600006300000000000000FFFFFFFFFFFF7B0084FF" },
+  { hash: 0x27, letter: 0x42, game: "Kirby no Block Ball (Japan)", colors: "A59CFFFFFF00006300000000FF6352D600006300000000000000FFFFFFFFFFFF7B0084FF" },
+  { hash: 0xC9, game: "Super Mario Land 2 - 6 Golden Coins (USA, Europe)", colors: "FFFFCE63EFEF9C84315A5A5AFFFFFFFF7300944200000000FFFFFF63A5FF0000FF000000" },
+  { hash: 0x4E, game: "Wave Race (USA, Europe)", colors: "FFFFFF63A5FF0000FF000000FFFFFFFF8484943A3A000000FFFFFFFFFF7B0084FFFF0000" },
+  { hash: 0x6B, game: "Donkey Kong Land III (USA, Europe)", colors: "FFFFFF8C8CDE52528C000000FFC542FFD600943A004A0000FFFFFF5ABDFFFF00000000FF" },
+  { hash: 0x18, letter: 0x4B, game: "Donkey Kong Land (Japan)", colors: "FFFFFF8C8CDE52528C000000FFC542FFD600943A004A0000FFFFFF5ABDFFFF00000000FF" },
+  { hash: 0x6A, letter: 0x4B, game: "Donkey Kong Land 2 (USA, Europe)", colors: "FFFFFF8C8CDE52528C000000FFC542FFD600943A004A0000FFFFFF5ABDFFFF00000000FF" },
+  { hash: 0x9D, game: "Killer Instinct (USA, Europe)", colors: "FFFFFF8C8CDE52528C000000FFFFFFFF8484943A3A000000FFFFFFFFAD63843100000000" },
+  { hash: 0x17, game: "Othello (Europe)", colors: "FFFFFF7BFF31008400000000FFFFFFFF8484943A3A000000FFFFFF63A5FF0000FF000000" },
+  { hash: 0x8B, game: "Mystic Quest (Europe)", colors: "FFFFFF7BFF31008400000000FFFFFFFF8484943A3A000000FFFFFF63A5FF0000FF000000" },
+  { hash: 0x27, letter: 0x4E, game: "Magnetic Soccer (Europe)", colors: "FFFFFF7BFF31008400000000FFFFFFFF8484943A3A000000FFFFFF63A5FF0000FF000000" },
+  { hash: 0x61, letter: 0x41, game: "Vegas Stakes (USA, Europe)", colors: "FFFFFF7BFF31008400000000FFFFFFFF8484943A3A000000FFFFFF63A5FF0000FF000000" },
+  { hash: 0x10, game: "Super R.C. Pro-Am (USA, Europe)", colors: "FFFFFFFFAD63843100000000FFFFFF63A5FF0000FF000000FFFFFF7BFF31008400000000" },
+  { hash: 0xF6, game: "Mega Man - Dr. Wily's Revenge (Europe)", colors: "FFFFFFFFAD63843100000000FFFFFF63A5FF0000FF000000FFFFFF7BFF31008400000000" },
+  { hash: 0x68, game: "Adventures of Lolo (Europe)", colors: "FFFFFFFFAD63843100000000FFFFFF63A5FF0000FF000000FFFFFF7BFF31008400000000" },
+  { hash: 0x29, game: "Mega Man III (Europe)", colors: "FFFFFFFFAD63843100000000FFFFFF63A5FF0000FF000000FFFFFF7BFF31008400000000" },
+  { hash: 0x52, game: "Street Fighter II (USA, Europe) (Rev A)", colors: "FFFFFFFFAD63843100000000FFFFFF63A5FF0000FF000000FFFFFF7BFF31008400000000" },
+  { hash: 0x01, game: "Arcade Classic No. 4 - Defender & Joust (USA, Europe)", colors: "FFFFFFFFAD63843100000000FFFFFF63A5FF0000FF000000FFFFFF7BFF31008400000000" },
+  { hash: 0x5D, game: "Battle Arena Toshinden (USA)", colors: "FFFFFFFFAD63843100000000FFFFFF63A5FF0000FF000000FFFFFF7BFF31008400000000" },
+  { hash: 0x6D, game: "King of Fighters '95, The (USA)", colors: "FFFFFFFFAD63843100000000FFFFFF63A5FF0000FF000000FFFFFF7BFF31008400000000" },
+  { hash: 0x70, game: "Legend of Zelda, The - Link's Awakening (France)", colors: "FFFFFFFF8484943A3A000000FFFFFF00FF00318400004A00FFFFFF63A5FF0000FF000000" },
+  { hash: 0xF7, game: "Boy and His Blob in the Rescue of Princess Blobette, A (Europe)", colors: "FFFFFFFFAD63843100000000FFFFFF7BFF31008400000000FFFFFF63A5FF0000FF000000" },
+  { hash: 0xA2, game: "Star Wars (USA, Europe) (Rev A)", colors: "FFFFFFFFAD63843100000000FFFFFF7BFF31008400000000FFFFFF63A5FF0000FF000000" },
+  { hash: 0x46, letter: 0x52, game: "Metroid II - Return of Samus (World)", colors: "FFFFFF63A5FF0000FF000000FFFF00FF0000630000000000FFFFFF7BFF31008400000000" },
+  { hash: 0xD3, letter: 0x49, game: "Wario Land II (USA, Europe)", colors: "FFFFFFADAD8442737B000000FFFFFFFFAD63843100000000FFFFFF63A5FF0000FF000000" },
+  { hash: 0xF4, letter: 0x2D, game: "Pac-In-Time (USA)", colors: "FFFFFF7BFF310063C5000000FFFFFFFF8484943A3A000000FFFFFF63A5FF0000FF000000" },
+];
+
+function parseColors(colors: string): Rgb[] {
+  const rgb: Rgb[] = [];
+  for (let i = 0; i < colors.length; i += 6) {
+    rgb.push([
+      parseInt(colors.slice(i, i + 2), 16),
+      parseInt(colors.slice(i + 2, i + 4), 16),
+      parseInt(colors.slice(i + 4, i + 6), 16),
+    ]);
+  }
+  return rgb;
+}
+
+// Mirrors the boot ROM's lookup: only Nintendo-licensed DMG carts are matched,
+// by the sum of the 16 title bytes, falling back to the title's 4th letter to
+// split hash collisions. Returns 12 colors, or null when the ROM isn't in the
+// table (the boot ROM would then use its default palette).
+export function findGameBoyColorPalette(rom: Uint8Array): Rgb[] | null {
+  if (rom.length < 0x150) return null;
+  if (rom[0x143] & 0x80) return null; // CGB carts bring their own colors
+
+  const oldLicensee = rom[0x14b];
+  const nintendo =
+    oldLicensee === 0x01 ||
+    (oldLicensee === 0x33 && rom[0x144] === 0x30 && rom[0x145] === 0x31); // "01"
+  if (!nintendo) return null;
+
+  let hash = 0;
+  for (let i = 0x134; i <= 0x143; i++) {
+    hash = (hash + rom[i]) & 0xff;
+  }
+
+  const candidates = ENTRIES.filter((entry) => entry.hash === hash);
+  const match =
+    candidates.find((entry) => entry.letter === rom[0x137]) ??
+    candidates.find((entry) => entry.letter === undefined);
+  return match ? parseColors(match.colors) : null;
+}

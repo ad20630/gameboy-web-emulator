@@ -266,7 +266,8 @@ void Ppu::renderBackgroundAndWindow(uint8_t line, std::array<uint8_t, kScreenWid
         }
 
         bgColorIndex[x] = colorIndex;
-        framebuffer_[line * kScreenWidth + x] = applyPalette(bgp(), colorIndex);
+        framebuffer_[line * kScreenWidth + x] = static_cast<uint8_t>(
+            applyPalette(bgp(), colorIndex) | (kLayerBackground << 2));
     }
 
     if (usedWindow) {
@@ -336,8 +337,10 @@ void Ppu::renderSprites(uint8_t line, const std::array<uint8_t, kScreenWidth>& b
                 continue; // behind non-zero background color
             }
 
-            const uint8_t palette = obp((attr & 0x10) ? 1 : 0);
-            framebuffer_[line * kScreenWidth + x] = applyPalette(palette, colorIndex);
+            const int paletteIndex = (attr & 0x10) ? 1 : 0;
+            const uint8_t layer = paletteIndex ? kLayerObj1 : kLayerObj0;
+            framebuffer_[line * kScreenWidth + x] = static_cast<uint8_t>(
+                applyPalette(obp(paletteIndex), colorIndex) | (layer << 2));
             break;
         }
     }

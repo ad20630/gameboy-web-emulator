@@ -103,8 +103,6 @@
   - Gamepad support
   - Improve Audio
   - Improve shimmering/screen tearing
-  - Seperate sprite/background palettes as featured on the Game Boy Color
-  - Custom palette maker
   - Support for ROMs in .zip archives
 
   ## Credits/License

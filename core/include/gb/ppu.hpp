@@ -28,9 +28,16 @@ public:
     void saveState(StateWriter& writer) const;
     void loadState(StateReader& reader);
 
-    // 160x144 pixels, row-major, one byte per pixel holding a final shade
-    // index (0-3, 0 = lightest). Callers apply their own 4-color palette to
-    // turn these into RGB -- the PPU never bakes in actual colors.
+    // Which palette a framebuffer pixel was drawn with (bits 2-3 of its byte).
+    static constexpr uint8_t kLayerBackground = 0; // BG and window (BGP)
+    static constexpr uint8_t kLayerObj0 = 1;       // sprites using OBP0
+    static constexpr uint8_t kLayerObj1 = 2;       // sprites using OBP1
+
+    // 160x144 pixels, row-major, one byte per pixel: bits 0-1 hold the final
+    // shade index (0-3, 0 = lightest) and bits 2-3 hold the layer above, so
+    // callers can give BG/OBJ0/OBJ1 separate 4-color palettes like the Game
+    // Boy Color does. Callers apply their own palettes to turn these into
+    // RGB -- the PPU never bakes in actual colors.
     const uint8_t* framebuffer() const { return framebuffer_.data(); }
 
 private:

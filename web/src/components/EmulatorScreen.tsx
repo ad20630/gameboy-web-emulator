@@ -4,7 +4,17 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { loadEmulatorModule } from "@/lib/wasm/loadEmulator";
 import { GbAudioPlayer } from "@/lib/audio/GbAudioPlayer";
+import { PalettePicker } from "@/components/PalettePicker";
 import { TouchControls } from "@/components/TouchControls";
+import { useCustomPalettes } from "@/lib/customPalettes";
+import { findGameBoyColorPalette } from "@/lib/gameBoyColorPalettes";
+import {
+  AUTO_PALETTE,
+  DEFAULT_PALETTE,
+  paletteColor,
+  resolvePalette,
+  type Palette,
+} from "@/lib/palettes";
 import { useIntegerScaling } from "@/lib/settings";
 import type { EmulatorInstance, EmulatorModule } from "@/lib/wasm/types";
 
@@ -64,273 +74,6 @@ function base64ToBytes(base64: string): Uint8Array {
   return bytes;
 }
 
-type Palette = readonly [number, number, number][];
-
-// Shade index (0 = lightest) -> RGB, as produced by Ppu::framebuffer().
-const PALETTES: Record<string, Palette> = {
-  "grayscale": [
-    [255, 255, 255],
-    [170, 170, 170],
-    [85, 85, 85],
-    [0, 0, 0],
-  ],
-  "dmg": [
-    [155, 188, 15],
-    [139, 172, 15],
-    [48, 98, 48],
-    [15, 56, 15],
-  ],
-  "light": [
-    [29, 222, 206],
-    [25, 199, 179],
-    [22, 165, 150],
-    [11, 122, 109],
-  ],
-  "pocket": [
-    [196, 207, 161],
-    [139, 149, 109],
-    [77, 83, 60],
-    [31, 31, 31],
-  ],
-  "inverted": [
-    [0, 0, 0],
-    [85, 85, 85],
-    [170, 170, 170],
-    [255, 255, 255],
-  ],
-  "splash-down": [
-    [255, 255, 165],
-    [255, 148, 148],
-    [148, 148, 255],
-    [0, 0, 0],
-  ],
-  "splash-down-a": [
-    [255, 255, 255],
-    [255, 255, 0],
-    [255, 0, 0],
-    [0, 0, 0],
-  ],
-  "splash-down-b": [
-    [255, 255, 255],
-    [255, 255, 0],
-    [123, 74, 0],
-    [0, 0, 0],
-  ],
-  "splash-left": [
-    [255, 255, 255],
-    [99, 165, 255],
-    [0, 0, 255],
-    [0, 0, 0],
-  ],
-  "splash-left-a": [
-    [255, 255, 255],
-    [140, 140, 222],
-    [82, 82, 140],
-    [0, 0, 0],
-  ],
-  "splash-left-b": [
-    [255, 255, 255],
-    [165, 165, 165],
-    [82, 82, 82],
-    [0, 0, 0],
-  ],
-  "splash-right": [
-    [255, 255, 255],
-    [82, 255, 0],
-    [255, 66, 0],
-    [0, 0, 0],
-  ],
-  "splash-right-a": [
-    [255, 255, 255],
-    [123, 255, 49],
-    [0, 99, 197],
-    [0, 0, 0],
-  ],
-  "splash-right-b": [
-    [0, 0, 0],
-    [0, 132, 132],
-    [255, 222, 0],
-    [255, 255, 255],
-  ],
-  "splash-up": [
-    [255, 255, 255],
-    [255, 173, 99],
-    [132, 49, 0],
-    [0, 0, 0],
-  ],
-  "splash-up-a": [
-    [255, 255, 255],
-    [255, 132, 132],
-    [148, 58, 58],
-    [0, 0, 0],
-  ],
-  "splash-up-b": [
-    [255, 230, 197],
-    [206, 156, 132],
-    [132, 107, 41],
-    [90, 49, 8],
-  ],
-  "soft-dmg": [
-    [218, 251, 221],
-    [173, 211, 172],
-    [82, 156, 144],
-    [16, 87, 97],
-  ],
-  "red": [
-    [253, 238, 238],
-    [232, 180, 180],
-    [185, 101, 101],
-    [92, 38, 38],
-  ],
-  "blue": [
-    [237, 243, 250],
-    [175, 201, 224],
-    [95, 132, 172],
-    [38, 65, 92],
-  ],
-  "green": [
-    [238, 253, 238],
-    [180, 232, 180],
-    [101, 185, 101],
-    [38, 92, 38],
-  ],
-  "orange": [
-    [253, 232, 210],
-    [240, 175, 110],
-    [200, 120, 60],
-    [110, 60, 25],
-  ],
-  "purple": [
-    [247, 238, 253],
-    [208, 180, 232],
-    [143, 101, 185],
-    [62, 38, 92],
-  ],
-  "yellow": [
-    [253, 251, 230],
-    [230, 220, 150],
-    [185, 170, 80],
-    [92, 85, 35],
-  ],
-  "pink": [
-    [253, 238, 245],
-    [235, 170, 195],
-    [185, 90, 130],
-    [92, 35, 60],
-  ],
-  "brown": [
-    [245, 230, 210],
-    [210, 175, 140],
-    [150, 110, 75],
-    [75, 50, 30],
-  ],
-  "amber-dusk": [
-    [255, 240, 214],
-    [240, 165, 90],
-    [50, 90, 110],
-    [15, 30, 45],
-  ],
-  "coral-reef": [
-    [255, 235, 205],
-    [250, 140, 110],
-    [40, 120, 130],
-    [10, 40, 55],
-  ],
-  "neon-tide": [
-    [255, 214, 240],
-    [255, 110, 190],
-    [40, 130, 180],
-    [10, 20, 60],
-  ],
-  "frostbite": [
-    [214, 230, 255],
-    [140, 170, 210],
-    [150, 90, 60],
-    [80, 30, 20],
-  ],
-  "tundra": [
-    [205, 245, 240],
-    [120, 180, 175],
-    [150, 100, 60],
-    [70, 35, 15],
-  ],
-  "nightfire": [
-    [230, 220, 255],
-    [150, 140, 200],
-    [170, 80, 70],
-    [70, 20, 30],
-  ],
-};
-
-const PALETTE_LABELS: Record<keyof typeof PALETTES, string> = {
-  "grayscale": "Grayscale",
-  "dmg": "DMG",
-  "light": "Gameboy Light",
-  "pocket": "Gameboy Pocket",
-  "inverted": "Inverted",
-  "splash-down": "Down",
-  "splash-down-a": "Down + A",
-  "splash-down-b": "Down + B",
-  "splash-left": "Left",
-  "splash-left-a": "Left + A",
-  "splash-left-b": "Left + B",
-  "splash-right": "Right",
-  "splash-right-a": "Right + A",
-  "splash-right-b": "Right + B",
-  "splash-up": "Up",
-  "splash-up-a": "Up + A",
-  "splash-up-b": "Up + B",
-  "soft-dmg": "Soft DMG",
-  "red": "Red",
-  "blue": "Blue",
-  "green": "Green",
-  "orange": "Orange",
-  "purple": "Purple",
-  "yellow": "Yellow",
-  "pink": "Pink",
-  "brown": "Brown",
-  "amber-dusk": "Amber Dusk",
-  "coral-reef": "Coral Reef",
-  "neon-tide": "Neon Tide",
-  "frostbite": "Frostbite",
-  "tundra": "Tundra",
-  "nightfire": "Nightfire",
-};
-
-const DEFAULT_PALETTE = "grayscale";
-
-const CUSTOM_PALETTE_KEYS = new Set([
-  "soft-dmg",
-  "red",
-  "blue",
-  "green",
-  "orange",
-  "purple",
-  "yellow",
-  "pink",
-  "brown",
-  "amber-dusk",
-  "coral-reef",
-  "neon-tide",
-  "frostbite",
-  "tundra",
-  "nightfire",
-]);
-
-type PaletteGroup = "hardware" | "boot" | "custom";
-
-function paletteGroup(key: string): PaletteGroup {
-  if (key.startsWith("splash-")) return "boot";
-  if (CUSTOM_PALETTE_KEYS.has(key)) return "custom";
-  return "hardware";
-}
-
-const PALETTE_GROUP_LABELS: Record<PaletteGroup, string> = {
-  hardware: "Hardware",
-  boot: "GBC Boot Palettes",
-  custom: "Custom",
-};
-
 // Bundled ROMs served from web/public/roms, selectable without a file picker.
 const TEST_ROM_GROUPS: { label: string; roms: Record<string, string> }[] = [
   {
@@ -372,7 +115,11 @@ export function EmulatorScreen() {
   const cartridgeIdRef = useRef<string | null>(null);
   const [status, setStatus] = useState<LoadStatus>("loading");
   const [romLoaded, setRomLoaded] = useState(false);
-  const [paletteKey, setPaletteKey] = useState<keyof typeof PALETTES>(DEFAULT_PALETTE);
+  const [paletteKey, setPaletteKey] = useState<string>(DEFAULT_PALETTE);
+  const [autoPalette, setAutoPalette] = useState<Palette | null>(null);
+  const customPalettes = useCustomPalettes();
+  // Colors from the palette editor's draft, shown live while it's open.
+  const [previewPalette, setPreviewPalette] = useState<Palette | null>(null);
   const [selectedTestRom, setSelectedTestRom] = useState("");
   const [paused, setPaused] = useState(false);
   const [speed, setSpeed] = useState<Speed>(1);
@@ -384,6 +131,10 @@ export function EmulatorScreen() {
   const [saveFlash, setSaveFlash] = useState(false);
   const [loadFlash, setLoadFlash] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  // While the palette picker is open on a phone in landscape, the menu's
+  // other controls and its dimming get out of the way so the game is fully
+  // visible; closing the picker brings them back.
+  const [palettePickerOpen, setPalettePickerOpen] = useState(false);
   const [canvasSize, setCanvasSize] = useState({
     width: SCREEN_WIDTH,
     height: SCREEN_HEIGHT,
@@ -489,6 +240,13 @@ export function EmulatorScreen() {
     audioPlayerRef.current?.setMuted(muted);
   }, [muted]);
 
+  // The palette on screen: the editor's draft while one is being edited,
+  // otherwise the selection. drawFrame reads it through a ref so a palette
+  // change repaints without giving drawFrame a new identity - the frame loop
+  // below depends on it and would restart on every change (each color drag).
+  const palette = previewPalette ?? resolvePalette(paletteKey, autoPalette, customPalettes);
+  const paletteRef = useRef<Palette>(palette);
+
   const drawFrame = useCallback(() => {
     const emulator = emulatorRef.current;
     const canvas = canvasRef.current;
@@ -502,10 +260,16 @@ export function EmulatorScreen() {
     }
     const imageData = imageDataRef.current;
     const framebuffer = emulator.getFramebuffer();
-    const palette = PALETTES[paletteKey];
+    const colors = paletteRef.current;
 
     for (let i = 0; i < framebuffer.length; i++) {
-      const [r, g, b] = palette[framebuffer[i] & 0x03];
+      const pixel = framebuffer[i];
+      const layer = (pixel >> 2) & 0x03;
+      const [r, g, b] = paletteColor(
+        colors,
+        layer > 2 ? 0 : layer, // layer 3 is unused
+        pixel & 0x03
+      );
       const offset = i * 4;
       imageData.data[offset] = r;
       imageData.data[offset + 1] = g;
@@ -514,7 +278,7 @@ export function EmulatorScreen() {
     }
 
     ctx.putImageData(imageData, 0, 0);
-  }, [paletteKey]);
+  }, []);
 
   useEffect(() => {
     // Paused: cancel the loop outright (rather than running it in place)
@@ -581,8 +345,9 @@ export function EmulatorScreen() {
   // Repaint the current frame immediately when the palette changes, even if
   // the emulator isn't running (e.g. before a ROM is loaded).
   useEffect(() => {
+    paletteRef.current = palette;
     drawFrame();
-  }, [drawFrame]);
+  }, [palette, drawFrame]);
 
   const setButton = useCallback(
     (buttonName: keyof EmulatorModule["Button"], pressed: boolean) => {
@@ -596,6 +361,16 @@ export function EmulatorScreen() {
 
   useEffect(() => {
     const handleKey = (pressed: boolean) => (event: KeyboardEvent) => {
+      // Typing (e.g. naming a custom palette) isn't playing: leave z/x,
+      // arrows, Shift and Enter alone in text fields.
+      const target = event.target;
+      if (
+        target instanceof HTMLTextAreaElement ||
+        (target instanceof HTMLInputElement && target.type === "text")
+      ) {
+        return;
+      }
+
       const buttonName = KEY_TO_BUTTON[event.key];
       if (!buttonName) return;
 
@@ -666,6 +441,8 @@ export function EmulatorScreen() {
 
     emulator.reset();
     emulator.loadRom(bytes);
+
+    setAutoPalette(findGameBoyColorPalette(bytes));
 
     const cartridgeId = readCartridgeId(bytes);
     cartridgeIdRef.current = cartridgeId;
@@ -776,7 +553,9 @@ export function EmulatorScreen() {
         onClick={() => setMenuOpen((prev) => !prev)}
         aria-label={menuOpen ? "Close menu" : "Open menu"}
         aria-expanded={menuOpen}
-        className="absolute right-2 top-2 z-30 hidden h-8 w-8 items-center justify-center rounded-full border border-outline bg-surface-translucent text-foreground-secondary phone-landscape:flex"
+        className={`absolute right-2 top-2 z-30 hidden h-8 w-8 items-center justify-center rounded-full border border-outline bg-surface-translucent text-foreground-secondary ${
+          palettePickerOpen ? "" : "phone-landscape:flex"
+        }`}
       >
         {menuOpen ? "×" : "☰"}
       </button>
@@ -792,13 +571,17 @@ export function EmulatorScreen() {
       <div className="w-full shrink-0 touch:max-w-[480px] phone-landscape:contents">
       <div
         onClick={() => setMenuOpen(false)}
-        className={`flex w-full min-w-0 shrink-0 flex-col items-center gap-3 phone-landscape:absolute phone-landscape:inset-0 phone-landscape:z-20 phone-landscape:justify-center phone-landscape:bg-black/60 phone-landscape:p-3 ${
-          menuOpen ? "" : "phone-landscape:hidden"
-        }`}
+        className={`flex w-full min-w-0 shrink-0 flex-col items-center gap-3 phone-landscape:absolute phone-landscape:inset-0 phone-landscape:z-20 phone-landscape:justify-center phone-landscape:p-3 ${
+          palettePickerOpen
+            ? "phone-landscape:pointer-events-none"
+            : "phone-landscape:bg-black/60"
+        } ${menuOpen ? "" : "phone-landscape:hidden"}`}
       >
         <div
           onClick={(event) => event.stopPropagation()}
-          className="flex w-full min-w-0 shrink-0 flex-col items-center gap-3 phone-landscape:w-full phone-landscape:max-w-lg phone-landscape:rounded phone-landscape:border phone-landscape:border-outline phone-landscape:bg-background phone-landscape:p-3"
+          className={`flex w-full min-w-0 shrink-0 flex-col items-center gap-3 phone-landscape:w-full phone-landscape:max-w-lg phone-landscape:rounded phone-landscape:border phone-landscape:border-outline phone-landscape:bg-background phone-landscape:p-3 ${
+            palettePickerOpen ? "phone-landscape:invisible" : ""
+          }`}
         >
         <div className="flex w-full min-w-0 shrink-0 flex-wrap items-center gap-3">
           <select
@@ -850,25 +633,13 @@ export function EmulatorScreen() {
             autoComplete="off"
             className="min-w-0 flex-1 overflow-hidden text-sm text-foreground-secondary file:mr-3 file:rounded-sm file:border file:border-outline file:bg-surface file:px-3 file:py-1 file:text-sm file:text-foreground-secondary"
           />
-          <select
+          <PalettePicker
             value={paletteKey}
-            onChange={(event) =>
-              setPaletteKey(event.target.value as keyof typeof PALETTES)
-            }
-            className="min-w-0 shrink-0 truncate rounded-sm border border-outline bg-surface px-2 py-1 text-sm text-foreground-secondary"
-          >
-            {(["hardware", "boot", "custom"] as const).map((group) => (
-              <optgroup key={group} label={PALETTE_GROUP_LABELS[group]}>
-                {Object.entries(PALETTE_LABELS)
-                  .filter(([key]) => paletteGroup(key) === group)
-                  .map(([key, label]) => (
-                    <option key={key} value={key}>
-                      {label}
-                    </option>
-                  ))}
-              </optgroup>
-            ))}
-          </select>
+            onChange={setPaletteKey}
+            autoColors={resolvePalette(AUTO_PALETTE, autoPalette, customPalettes)}
+            onPreview={setPreviewPalette}
+            onOpenChange={setPalettePickerOpen}
+          />
         </div>
         <div className="flex w-full min-w-0 shrink-0 flex-wrap items-center justify-center gap-2">
           <div className="flex w-full flex-wrap items-center justify-center gap-2 md:w-auto md:justify-start md:mr-auto">
