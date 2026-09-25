@@ -12,7 +12,7 @@
   - Controlled via keyboard or mobile friendly touch controls.
   - Persistent cartidge saves stored in browser localStorage.
   - Save states, speedup, and pausing.
-  - Several palette options.
+  - Several preset palette options and a custom palette creator.
 
   <table>
     <tr>
@@ -56,7 +56,13 @@
       components/
         EmulatorScreen.tsx   Main loop, canvas rendering, input/save-state wiring
         TouchControls.tsx    On-screen D-pad/buttons for mobile
+        PalettePicker.tsx    Palette dialog: hardware, GBC boot, preset and custom palettes
+        CustomPaletteEditor.tsx  Custom palette creator (4/12 colors, import/export, reverse, reorder)
+        PaletteSwatch.tsx    Small preview of a palette's colors
       lib/
+        palettes.ts          Built-in palette list
+        customPalettes.ts    User-made palettes stored in localStorage
+        gameBoyColorPalettes.ts  GBC boot ROM palettes for licensed games (Auto Palette)
         wasm/
           loadEmulator.ts    Loads the compiled wasm module
           types.ts           TS types for the wasm module's exposed API
