@@ -77,17 +77,17 @@ function base64ToBytes(base64: string): Uint8Array {
 // Bundled ROMs served from web/public/roms, selectable without a file picker.
 const TEST_ROM_GROUPS: { label: string; roms: Record<string, string> }[] = [
   {
-    label: "Hardware Tests",
-    roms: {
-      "cpu_instrs.gb": "/roms/cpu_instrs.gb",
-      "dmg-acid2.gb": "/roms/dmg-acid2.gb",
-    },
-  },
-  {
     label: "Homebrew Games",
     roms: {
       "Snake.gb": "/roms/Snake.gb",
       "PandorasBlocks.gbc": "/roms/PandorasBlocks.gbc",
+    },
+  },
+  {
+    label: "Hardware Tests",
+    roms: {
+      "cpu_instrs.gb": "/roms/cpu_instrs.gb",
+      "dmg-acid2.gb": "/roms/dmg-acid2.gb",
     },
   },
 ];
