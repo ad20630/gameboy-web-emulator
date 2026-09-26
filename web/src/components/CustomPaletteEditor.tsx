@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import "@melloware/coloris/dist/coloris.css";
 
 import { PaletteSwatch } from "@/components/PaletteSwatch";
 import {
@@ -30,6 +31,12 @@ const spread = (four: readonly string[]): string[] =>
 // Every layer already uses the same four shades.
 const isUniform = (colors: readonly string[]): boolean =>
   colors.every((color, i) => color === colors[i % SHADES_PER_LAYER]);
+
+// Coloris attaches to the color swatches by this class.
+const SWATCH_SELECTOR = ".gb-color-swatch";
+
+// Themes that get Coloris's light popup; the rest (dark, gba) get the dark one.
+const LIGHT_THEMES = ["light", "dmg"];
 
 const BUTTON_CLASS = "rounded border px-3 py-1 text-sm";
 const SECONDARY_BUTTON_CLASS = `${BUTTON_CLASS} border-outline bg-surface text-foreground-secondary`;
@@ -74,6 +81,34 @@ export function CustomPaletteEditor({
   // Result of the last Import, shown until the box is edited again.
   const [notice, setNotice] = useState<string | null>(null);
   const hexBoxRef = useRef<HTMLTextAreaElement>(null);
+  const colorisRef = useRef<typeof import("@melloware/coloris") | null>(null);
+
+  // Coloris touches `document` as soon as it loads, so it can't be imported
+  // during server rendering. It binds to the swatches by selector, so the
+  // inputs React renders (and re-renders) don't need to be wired up one by one.
+  useEffect(() => {
+    let cancelled = false;
+    import("@melloware/coloris").then(({ default: Coloris }) => {
+      if (cancelled) return;
+      colorisRef.current = Coloris;
+      Coloris.init();
+      Coloris({
+        el: SWATCH_SELECTOR,
+        themeMode: LIGHT_THEMES.includes(document.documentElement.dataset.theme ?? "")
+          ? "light"
+          : "dark",
+        format: "hex",
+        alpha: false,
+        wrap: false,
+        // Focusing the popup's hex box would raise the on-screen keyboard over it.
+        focusInput: !window.matchMedia("(pointer: coarse)").matches,
+      });
+    });
+    return () => {
+      cancelled = true;
+      colorisRef.current?.close();
+    };
+  }, []);
 
   const parsed = useMemo(() => parseHexCodes(hexText, mode), [hexText, mode]);
   const previewColors = useMemo(() => colors.map((hex) => hexToRgb(hex)), [colors]);
@@ -109,8 +144,8 @@ export function CustomPaletteEditor({
   // and a position in the full 12 otherwise.
   const setColor = (index: number, hex: string) => {
     const value = hex.toLowerCase();
-    setColors(
-      colors.map((color, i) =>
+    setColors((current) =>
+      current.map((color, i) =>
         (mode === SHADES_PER_LAYER ? i % SHADES_PER_LAYER === index : i === index) ? value : color
       )
     );
@@ -195,7 +230,11 @@ export function CustomPaletteEditor({
   const shownColors = mode === SHADES_PER_LAYER ? colors.slice(0, SHADES_PER_LAYER) : colors;
 
   return (
-    <div className="flex min-h-0 flex-col gap-3 overflow-y-auto">
+    // The popup doesn't follow its swatch when this scrolls, so close it.
+    <div
+      className="flex min-h-0 flex-col gap-3 overflow-y-auto"
+      onScroll={() => colorisRef.current?.close()}
+    >
       <h3 className="font-semibold text-foreground">
         {isNew ? "New palette" : "Edit palette"}
       </h3>
@@ -255,14 +294,44 @@ export function CustomPaletteEditor({
               {Array.from({ length: SHADES_PER_LAYER }, (_, shade) => {
                 const index = rowIndex * SHADES_PER_LAYER + shade;
                 return (
+                  // A text input drawn as a swatch: Coloris needs an input to
+                  // write to, and the hex text itself is hidden. It listens for
+                  // `input` rather than `change` because Coloris sets the value
+                  // directly, which React's onChange would ignore.
                   <input
                     key={index}
-                    type="color"
+                    type="text"
+                    readOnly
                     value={shownColors[index]}
-                    onChange={(event) => setColor(index, event.target.value)}
+                    onInput={(event) => setColor(index, event.currentTarget.value)}
+                    // Nothing here is meant to be selected. user-select covers most
+                    // browsers, but Safari ignores it on inputs, so collapse any
+                    // selection that still happens.
+                    onSelect={(event) => event.currentTarget.setSelectionRange(0, 0)}
+                    // Pointer presses don't focus the input, so no caret or touch
+                    // selection handle is placed in it. Coloris opens on click, which
+                    // still fires; Enter/Space stand in for that from the keyboard.
+                    onMouseDown={(event) => event.preventDefault()}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        event.currentTarget.click();
+                      }
+                    }}
+                    inputMode="none"
+                    autoComplete="off"
                     aria-label={`${row} shade ${shade + 1} of ${SHADES_PER_LAYER}`}
                     title={shownColors[index].toUpperCase()}
-                    className="h-10 w-full cursor-pointer rounded-sm border border-outline bg-transparent p-0 touch:h-11"
+                    style={{
+                      backgroundColor: shownColors[index],
+                      color: "transparent",
+                      WebkitTextFillColor: "transparent",
+                      caretColor: "transparent",
+                      userSelect: "none",
+                      WebkitUserSelect: "none",
+                      WebkitTouchCallout: "none",
+                    }}
+                    className="gb-color-swatch h-10 w-full cursor-pointer rounded-sm border border-outline p-0 touch:h-11"
                   />
                 );
               })}

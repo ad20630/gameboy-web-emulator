@@ -141,3 +141,22 @@
    content never overflows (the canvas flexes to fit), so there's nothing to
    scroll in practice; only the boundary pull-to-refresh gesture gets
    through. */
+
+/* The Coloris color popup (custom palette editor), restyled with the theme
+   tokens so it follows all four themes. The id keeps these ahead of Coloris's
+   own light/dark rules; the editor still picks light or dark mode from the
+   theme for the parts these don't cover (checkerboard, swatch outlines). */
+#clr-picker {
+  border: 1px solid var(--color-outline);
+  background-color: var(--color-surface);
+}
+
+#clr-picker input.clr-color {
+  border-color: var(--color-outline);
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+}
+
+#clr-picker input.clr-color:focus {
+  border-color: var(--color-outline-strong);
+}

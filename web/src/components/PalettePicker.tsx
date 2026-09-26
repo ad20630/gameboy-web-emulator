@@ -107,12 +107,17 @@ export function PalettePicker({ value, onChange, autoColors, onPreview, onOpenCh
     if (!open) return;
     const handleKey = (event: KeyboardEvent) => {
       if (event.key !== "Escape") return;
+      // Escape in the color popup only dismisses the popup. Coloris closes
+      // itself in a document listener that runs after this one, so its open
+      // state can still be read here.
+      if (document.getElementById("clr-picker")?.classList.contains("clr-open")) return;
       // Escape backs out of the editor first, and only then closes the picker.
       if (editing) setEditing(null);
       else setOpen(false);
     };
-    window.addEventListener("keydown", handleKey);
-    return () => window.removeEventListener("keydown", handleKey);
+    // Capture phase, to run ahead of Coloris's own Escape handling.
+    window.addEventListener("keydown", handleKey, true);
+    return () => window.removeEventListener("keydown", handleKey, true);
   }, [open, editing]);
 
   // Steps through every palette in section order (Hardware, GBC Boot, Preset,
